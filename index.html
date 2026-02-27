@@ -459,10 +459,10 @@
     90% { opacity: var(--bird-opacity, 0.18); }
     100% { opacity: 0; transform: translateX(-60px) translateY(var(--fly-drift, 20px)); }
   }
-  .bg-bird svg { animation: wingFlap 0.4s ease-in-out infinite alternate; }
+  .bg-bird svg, .bg-bird img { animation: wingFlap 0.4s ease-in-out infinite alternate; }
   @keyframes wingFlap {
     0% { transform: scaleY(1); }
-    100% { transform: scaleY(0.92); }
+    100% { transform: scaleY(0.95); }
   }
 
   .screen { position: relative; z-index: 1; }
@@ -902,12 +902,12 @@ function createKenshinSVG(size, mood) {
 
 function placeBird(elementId, size, mood) {
   const el = document.getElementById(elementId);
-  if (el) el.innerHTML = createBirdSVG(size, mood);
+  if (el) el.innerHTML = `<img src="img/bird-sekisei.png" alt="とり" style="width:${size}px;height:auto;object-fit:contain;">`;
 }
 
 function placeKenshin(elementId, size, mood) {
   const el = document.getElementById(elementId);
-  if (el) el.innerHTML = createKenshinSVG(size, mood);
+  if (el) el.innerHTML = `<img src="img/kenshin.png" alt="けんしん" style="width:${size}px;height:auto;object-fit:contain;">`;
 }
 
 // ===== BACKGROUND BIRD SPECIES =====
@@ -1002,20 +1002,29 @@ function initBackgroundBirds() {
   const container = document.getElementById('bgBirds');
   if (!container) return;
 
-  const species = ['hakusekirei','hato','suzume','warai','washi','tonbi'];
+  // 6種の鳥のPNG画像を背景に散りばめる
+  const birdImages = [
+    'img/bird-suzume.png',
+    'img/bird-sekisei.png',
+    'img/bird-sekirei.png',
+    'img/bird-kawasemi.png',
+    'img/bird-washi.png',
+    'img/bird-inko-green.png',
+  ];
+
   const configs = [
-    { sp: 'suzume',       size: 28, top: '8%',  dir: 'right', dur: '22s', delay: '0s',   drift: '-20px', opacity: 0.13 },
-    { sp: 'hato',         size: 36, top: '18%', dir: 'left',  dur: '28s', delay: '4s',   drift: '15px',  opacity: 0.12 },
-    { sp: 'hakusekirei',  size: 26, top: '32%', dir: 'right', dur: '20s', delay: '8s',   drift: '-25px', opacity: 0.10 },
-    { sp: 'tonbi',        size: 44, top: '12%', dir: 'left',  dur: '35s', delay: '2s',   drift: '10px',  opacity: 0.09 },
-    { sp: 'warai',        size: 32, top: '55%', dir: 'right', dur: '25s', delay: '12s',  drift: '-15px', opacity: 0.11 },
-    { sp: 'washi',        size: 48, top: '5%',  dir: 'left',  dur: '40s', delay: '6s',   drift: '8px',   opacity: 0.07 },
-    { sp: 'suzume',       size: 22, top: '70%', dir: 'right', dur: '18s', delay: '15s',  drift: '-30px', opacity: 0.12 },
-    { sp: 'hato',         size: 30, top: '42%', dir: 'left',  dur: '30s', delay: '10s',  drift: '20px',  opacity: 0.10 },
-    { sp: 'hakusekirei',  size: 24, top: '82%', dir: 'right', dur: '22s', delay: '20s',  drift: '-18px', opacity: 0.11 },
-    { sp: 'tonbi',        size: 38, top: '28%', dir: 'right', dur: '32s', delay: '18s',  drift: '-12px', opacity: 0.08 },
-    { sp: 'warai',        size: 28, top: '65%', dir: 'left',  dur: '24s', delay: '14s',  drift: '22px',  opacity: 0.10 },
-    { sp: 'suzume',       size: 20, top: '48%', dir: 'right', dur: '16s', delay: '7s',   drift: '-28px', opacity: 0.14 },
+    { img: 0, size: 40, top: '8%',  dir: 'right', dur: '22s', delay: '0s',   drift: '-20px', opacity: 0.25 },
+    { img: 3, size: 50, top: '18%', dir: 'left',  dur: '28s', delay: '4s',   drift: '15px',  opacity: 0.20 },
+    { img: 2, size: 38, top: '32%', dir: 'right', dur: '20s', delay: '8s',   drift: '-25px', opacity: 0.18 },
+    { img: 4, size: 65, top: '12%', dir: 'left',  dur: '35s', delay: '2s',   drift: '10px',  opacity: 0.15 },
+    { img: 5, size: 42, top: '55%', dir: 'right', dur: '25s', delay: '12s',  drift: '-15px', opacity: 0.22 },
+    { img: 1, size: 45, top: '5%',  dir: 'left',  dur: '40s', delay: '6s',   drift: '8px',   opacity: 0.18 },
+    { img: 0, size: 32, top: '70%', dir: 'right', dur: '18s', delay: '15s',  drift: '-30px', opacity: 0.22 },
+    { img: 3, size: 44, top: '42%', dir: 'left',  dur: '30s', delay: '10s',  drift: '20px',  opacity: 0.18 },
+    { img: 2, size: 35, top: '82%', dir: 'right', dur: '22s', delay: '20s',  drift: '-18px', opacity: 0.20 },
+    { img: 4, size: 55, top: '28%', dir: 'right', dur: '32s', delay: '18s',  drift: '-12px', opacity: 0.14 },
+    { img: 5, size: 38, top: '65%', dir: 'left',  dur: '24s', delay: '14s',  drift: '22px',  opacity: 0.20 },
+    { img: 1, size: 36, top: '48%', dir: 'right', dur: '16s', delay: '7s',   drift: '-28px', opacity: 0.24 },
   ];
 
   configs.forEach(c => {
@@ -1026,7 +1035,7 @@ function initBackgroundBirds() {
     div.style.setProperty('--fly-delay', c.delay);
     div.style.setProperty('--fly-drift', c.drift);
     div.style.setProperty('--bird-opacity', c.opacity);
-    div.innerHTML = createSpeciesSVG(c.sp, c.size);
+    div.innerHTML = `<img src="${birdImages[c.img]}" style="width:${c.size}px;height:auto;" alt="">`;
     container.appendChild(div);
   });
 }
