@@ -148,20 +148,27 @@
   .retry-banner span { font-weight: 700; }
 
   /* ===== PRACTICE SCREEN ===== */
-  #practiceScreen { align-items: center; padding-top: 20px; gap: 12px; }
-  .practice-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; }
+  #practiceScreen {
+    align-items: center; padding: 10px 12px;
+    gap: 6px; height: 100vh; max-height: 100vh;
+    overflow: hidden; justify-content: space-between;
+    position: fixed; inset: 0; z-index: 2; background: var(--bg);
+  }
+  .practice-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 8px; flex-shrink: 0; }
   .practice-info { flex: 1; }
-  .practice-info .kanji-reading { font-size: 14px; color: var(--mid-gray); }
-  .practice-info .kanji-meaning { font-size: 13px; color: var(--secondary); font-weight: 600; }
+  .practice-info .kanji-reading { font-size: 13px; color: var(--mid-gray); }
+  .practice-info .kanji-meaning { font-size: 12px; color: var(--secondary); font-weight: 600; }
   .practice-progress-text { font-size: 12px; color: var(--mid-gray); text-align: right; }
 
   .canvas-wrapper {
-    position: relative; width: 100%; max-width: 600px; aspect-ratio: 1;
+    position: relative;
+    width: min(55vh, 90vw); height: min(55vh, 90vw);
     background: var(--card-bg); border-radius: var(--radius);
     box-shadow: var(--shadow-lg); overflow: hidden;
+    flex-shrink: 0;
   }
   .model-kanji {
-    position: absolute; inset: 10%; font-size: min(65vw, 360px);
+    position: absolute; inset: 10%; font-size: min(45vh, 75vw);
     color: rgba(0,0,0,0.06); display: flex; align-items: center;
     justify-content: center; pointer-events: none; z-index: 1;
     font-weight: 900; line-height: 1;
@@ -180,20 +187,20 @@
   }
 
   .practice-buttons {
-    display: flex; gap: 8px; width: 100%; max-width: 500px; flex-wrap: wrap;
-    justify-content: center;
+    display: flex; gap: 6px; width: 100%; max-width: 500px; flex-wrap: wrap;
+    justify-content: center; flex-shrink: 0;
   }
-  .practice-buttons .btn { flex: 1; min-width: 100px; }
+  .practice-buttons .btn { flex: 1; min-width: 80px; padding: 12px 16px; font-size: 14px; }
 
   /* ===== BIRD SPEECH ===== */
   .bird-speech {
-    display: flex; align-items: flex-start; gap: 12px;
-    background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-sm);
+    display: flex; align-items: flex-start; gap: 8px;
+    background: var(--card-bg); padding: 8px 12px; border-radius: var(--radius-sm);
     box-shadow: var(--shadow); width: 100%; max-width: 500px;
-    min-height: 52px; position: relative;
+    min-height: 40px; position: relative; flex-shrink: 0;
   }
   .bird-icon { flex-shrink: 0; animation: birdBounce 3s ease-in-out infinite; line-height: 0; }
-  .bird-text { font-size: 14px; font-weight: 500; line-height: 1.6; flex: 1; padding-top: 4px; }
+  .bird-text { font-size: 13px; font-weight: 500; line-height: 1.5; flex: 1; padding-top: 2px; }
 
   /* ===== RESULT SCREEN ===== */
   #resultScreen { align-items: center; justify-content: center; gap: 20px; }
@@ -247,7 +254,12 @@
   .stat-label { font-size: 11px; color: var(--mid-gray); margin-top: 4px; }
 
   /* ===== SENTENCE TEST SCREEN ===== */
-  #sentenceScreen { align-items: center; padding-top: 20px; gap: 12px; }
+  #sentenceScreen {
+    align-items: center; padding: 10px 12px;
+    gap: 6px; height: 100vh; max-height: 100vh;
+    overflow: hidden; justify-content: space-between;
+    position: fixed; inset: 0; z-index: 2; background: var(--bg);
+  }
   .sentence-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; }
   .sentence-info { flex: 1; }
   .sentence-info .sentence-label { font-size: 13px; color: var(--secondary); font-weight: 700; }
@@ -1580,6 +1592,13 @@ function save() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+
+  // 練習画面・文章テスト画面はスクロール禁止
+  if (id === 'practiceScreen' || id === 'sentenceScreen') {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
 
   if (id === 'gradeScreen') updateGradeScreen();
   if (id === 'kanjiListScreen') updateKanjiList();
