@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>けんしんかんぺき漢字ドリル</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+  :root {
+    --primary: #d97757;
+    --primary-light: #e8a88a;
+    --primary-dark: #b85e3f;
+    --secondary: #6a9bcc;
+    --secondary-light: #9bc0e0;
+    --tertiary: #788c5d;
+    --tertiary-light: #a3b389;
+    --dark: #141413;
+    --light: #faf9f5;
+    --mid-gray: #b0aea5;
+    --light-gray: #e8e6dc;
+    --bg: #faf9f5;
+    --card-bg: #ffffff;
+    --shadow: 0 2px 12px rgba(20,20,19,0.08);
+    --shadow-lg: 0 8px 32px rgba(20,20,19,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans JP', 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+    overflow-x: hidden;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: 100vh; padding: 20px; padding-bottom: 40px; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== TITLE SCREEN ===== */
+  #titleScreen {
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    background: linear-gradient(160deg, var(--light) 0%, var(--light-gray) 100%);
+  }
+  .title-bird { animation: birdBounce 2s ease-in-out infinite; line-height: 0; }
+  @keyframes birdBounce {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-12px) rotate(-3deg); }
+    75% { transform: translateY(-6px) rotate(3deg); }
+  }
+  .title-main {
+    font-size: 32px; font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-align: center; line-height: 1.3;
+  }
+  .title-sub { font-size: 14px; color: var(--mid-gray); font-weight: 500; }
+  .title-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 16px; }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 16px 24px; border: none; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: var(--secondary); color: white; }
+  .btn-secondary:hover { background: #5a8abc; }
+  .btn-tertiary { background: var(--tertiary); color: white; }
+  .btn-tertiary:hover { background: #657a4d; }
+  .btn-outline { background: transparent; border: 2px solid var(--light-gray); color: var(--dark); }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-sm { padding: 10px 16px; font-size: 14px; border-radius: 8px; }
+
+  /* ===== GRADE SELECT ===== */
+  #gradeScreen { align-items: center; padding-top: 40px; }
+  .grade-header { text-align: center; margin-bottom: 32px; }
+  .grade-header h2 { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
+  .grade-header p { color: var(--mid-gray); font-size: 14px; }
+  .grade-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 480px; }
+  .grade-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 24px;
+    box-shadow: var(--shadow); text-align: center; cursor: pointer;
+    transition: all 0.2s; border: 2px solid transparent;
+  }
+  .grade-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .grade-card .grade-num { font-size: 48px; font-weight: 900; color: var(--primary); }
+  .grade-card .grade-label { font-size: 14px; color: var(--mid-gray); margin-top: 4px; }
+  .grade-card .grade-count { font-size: 12px; color: var(--secondary); margin-top: 8px; font-weight: 600; }
+  .grade-card .grade-pct { font-size: 22px; font-weight: 900; color: var(--tertiary); margin-top: 8px; }
+  .grade-card .grade-progress {
+    margin-top: 12px; height: 6px; background: var(--light-gray);
+    border-radius: 3px; overflow: hidden;
+  }
+  .grade-card .grade-progress-fill {
+    height: 100%; background: var(--tertiary); border-radius: 3px; transition: width 0.3s;
+  }
+
+  /* ===== KANJI LIST ===== */
+  #kanjiListScreen { padding-top: 20px; }
+  .list-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .back-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: var(--light-gray); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { background: var(--primary-light); color: white; }
+  .list-header h2 { font-size: 20px; font-weight: 700; flex: 1; }
+  .kanji-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px; max-width: 600px;
+  }
+  .kanji-cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    background: var(--card-bg); border-radius: var(--radius-sm); font-size: 28px;
+    font-weight: 700; cursor: pointer; transition: all 0.2s;
+    box-shadow: var(--shadow); border: 2px solid transparent;
+    position: relative;
+  }
+  .kanji-cell:hover { border-color: var(--primary); transform: scale(1.05); }
+  .kanji-cell.mastered { background: #f0f7e9; border-color: var(--tertiary); }
+  .kanji-cell.mastered::after {
+    content: '✓'; position: absolute; top: 2px; right: 4px;
+    font-size: 10px; color: var(--tertiary);
+  }
+  .kanji-cell.incorrect { background: #fef0ec; border-color: var(--primary); }
+
+  .retry-banner {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white; padding: 16px; border-radius: var(--radius-sm);
+    margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .retry-banner span { font-weight: 700; }
+
+  /* ===== PRACTICE SCREEN ===== */
+  #practiceScreen { align-items: center; padding-top: 20px; gap: 12px; }
+  .practice-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; }
+  .practice-info { flex: 1; }
+  .practice-info .kanji-reading { font-size: 14px; color: var(--mid-gray); }
+  .practice-info .kanji-meaning { font-size: 13px; color: var(--secondary); font-weight: 600; }
+  .practice-progress-text { font-size: 12px; color: var(--mid-gray); text-align: right; }
+
+  .canvas-wrapper {
+    position: relative; width: 100%; max-width: 500px; aspect-ratio: 1;
+    background: var(--card-bg); border-radius: var(--radius);
+    box-shadow: var(--shadow-lg); overflow: hidden;
+  }
+  .model-kanji {
+    position: absolute; inset: 10%; font-size: min(60vw, 300px);
+    color: rgba(0,0,0,0.06); display: flex; align-items: center;
+    justify-content: center; pointer-events: none; z-index: 1;
+    font-weight: 900; line-height: 1;
+  }
+  .grid-lines {
+    position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  }
+  .grid-lines::before, .grid-lines::after {
+    content: ''; position: absolute; background: rgba(0,0,0,0.04);
+  }
+  .grid-lines::before { top: 50%; left: 5%; right: 5%; height: 1px; }
+  .grid-lines::after { left: 50%; top: 5%; bottom: 5%; width: 1px; }
+  #drawCanvas {
+    width: 100%; height: 100%; position: relative; z-index: 2;
+    touch-action: none; cursor: crosshair;
+  }
+
+  .practice-buttons {
+    display: flex; gap: 8px; width: 100%; max-width: 500px; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .practice-buttons .btn { flex: 1; min-width: 100px; }
+
+  /* ===== BIRD SPEECH ===== */
+  .bird-speech {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-sm);
+    box-shadow: var(--shadow); width: 100%; max-width: 500px;
+    min-height: 52px; position: relative;
+  }
+  .bird-icon { flex-shrink: 0; animation: birdBounce 3s ease-in-out infinite; line-height: 0; }
+  .bird-text { font-size: 14px; font-weight: 500; line-height: 1.6; flex: 1; padding-top: 4px; }
+
+  /* ===== RESULT SCREEN ===== */
+  #resultScreen { align-items: center; justify-content: center; gap: 20px; }
+  .result-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 32px;
+    box-shadow: var(--shadow-lg); text-align: center; width: 100%; max-width: 400px;
+  }
+  .result-card h2 { font-size: 24px; margin-bottom: 16px; }
+  .result-score { font-size: 64px; font-weight: 900; color: var(--primary); }
+  .result-detail { color: var(--mid-gray); font-size: 14px; margin-top: 8px; }
+  .result-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; }
+
+  /* ===== STAMP SCREEN ===== */
+  #stampScreen { align-items: center; padding-top: 20px; }
+  .stamp-header { text-align: center; margin-bottom: 24px; }
+  .stamp-header h2 { font-size: 22px; font-weight: 900; }
+  .stamp-header p { color: var(--mid-gray); font-size: 13px; margin-top: 4px; }
+  .streak-badge {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white; padding: 16px 24px; border-radius: var(--radius-sm);
+    text-align: center; margin-bottom: 24px;
+  }
+  .streak-badge .streak-num { font-size: 40px; font-weight: 900; }
+  .streak-badge .streak-label { font-size: 12px; opacity: 0.8; }
+  .stamp-calendar {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    width: 100%; max-width: 400px;
+  }
+  .stamp-day-header { text-align: center; font-size: 11px; color: var(--mid-gray); font-weight: 600; padding: 4px; }
+  .stamp-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 12px; color: var(--mid-gray);
+    background: var(--card-bg); position: relative;
+  }
+  .stamp-day.today { border: 2px solid var(--primary); font-weight: 700; color: var(--dark); }
+  .stamp-day.stamped::after {
+    content: ''; position: absolute; width: 24px; height: 24px; opacity: 0.9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='a' cx='40%25' cy='35%25'%3E%3Cstop offset='0%25' stop-color='%2390e050'/%3E%3Cstop offset='50%25' stop-color='%2360c830'/%3E%3Cstop offset='100%25' stop-color='%2348a828'/%3E%3C/radialGradient%3E%3CradialGradient id='b' cx='45%25' cy='35%25'%3E%3Cstop offset='0%25' stop-color='%23fff8e0'/%3E%3Cstop offset='70%25' stop-color='%23ffe840'/%3E%3Cstop offset='100%25' stop-color='%23f0d020'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='50' cy='58' rx='28' ry='32' fill='url(%23a)' stroke='%2340a020' stroke-width='1'/%3E%3Ccircle cx='50' cy='30' r='22' fill='url(%23b)' stroke='%23d0b820' stroke-width='1'/%3E%3Cellipse cx='42' cy='27' rx='5' ry='6' fill='white'/%3E%3Ccircle cx='43' cy='28' r='3' fill='%23141413'/%3E%3Ccircle cx='44' cy='27' r='1' fill='white'/%3E%3Cellipse cx='58' cy='27' rx='5' ry='6' fill='white'/%3E%3Ccircle cx='57' cy='28' r='3' fill='%23141413'/%3E%3Ccircle cx='58' cy='27' r='1' fill='white'/%3E%3Cellipse cx='50' cy='35' rx='5' ry='3.5' fill='%23e8a030' stroke='%23c08020' stroke-width='0.5'/%3E%3C/svg%3E");
+    background-size: contain; background-repeat: no-repeat;
+  }
+  .stamp-day.empty { background: transparent; }
+  .stamp-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+    margin-top: 24px; width: 100%; max-width: 400px;
+  }
+  .stat-card {
+    background: var(--card-bg); border-radius: var(--radius-sm); padding: 16px;
+    text-align: center; box-shadow: var(--shadow);
+  }
+  .stat-num { font-size: 28px; font-weight: 900; color: var(--primary); }
+  .stat-label { font-size: 11px; color: var(--mid-gray); margin-top: 4px; }
+
+  /* ===== SENTENCE TEST SCREEN ===== */
+  #sentenceScreen { align-items: center; padding-top: 20px; gap: 12px; }
+  .sentence-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; }
+  .sentence-info { flex: 1; }
+  .sentence-info .sentence-label { font-size: 13px; color: var(--secondary); font-weight: 700; }
+  .sentence-progress-text { font-size: 12px; color: var(--mid-gray); text-align: right; }
+
+  .sentence-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 24px 20px;
+    box-shadow: var(--shadow); width: 100%; max-width: 500px; text-align: center;
+  }
+  .sentence-text {
+    font-size: 22px; font-weight: 700; line-height: 2; letter-spacing: 2px;
+    word-break: keep-all;
+  }
+  .sentence-reading {
+    display: inline-block; background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    color: var(--primary-dark); padding: 2px 10px; border-radius: 8px;
+    border: 2px dashed var(--primary); font-weight: 900; font-size: 24px;
+    margin: 0 2px; vertical-align: baseline;
+    animation: readingPulse 2s ease-in-out infinite;
+  }
+  @keyframes readingPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(217,119,87,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(217,119,87,0); }
+  }
+  .sentence-hint {
+    font-size: 13px; color: var(--mid-gray); margin-top: 12px;
+  }
+  .sentence-hint span {
+    font-weight: 700; color: var(--primary);
+  }
+
+  .sentence-canvas-area {
+    display: flex; align-items: center; gap: 16px; width: 100%; max-width: 500px;
+    justify-content: center;
+  }
+  .sentence-canvas-wrapper {
+    position: relative; width: 160px; height: 160px;
+    background: var(--card-bg); border-radius: var(--radius);
+    box-shadow: var(--shadow-lg); overflow: hidden;
+    border: 3px solid var(--primary-light);
+  }
+  .sentence-canvas-wrapper .grid-lines::before {
+    content: ''; position: absolute; top: 50%; left: 8%; right: 8%; height: 1px;
+    background: rgba(0,0,0,0.06);
+  }
+  .sentence-canvas-wrapper .grid-lines::after {
+    content: ''; position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px;
+    background: rgba(0,0,0,0.06);
+  }
+  #sentenceCanvas {
+    width: 100%; height: 100%; position: relative; z-index: 2;
+    touch-action: none; cursor: crosshair;
+  }
+  .sentence-arrow {
+    font-size: 32px; color: var(--primary); font-weight: 900;
+    animation: arrowBounce 1s ease-in-out infinite;
+  }
+  @keyframes arrowBounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(6px); }
+  }
+  .sentence-answer-label {
+    font-size: 14px; color: var(--mid-gray); font-weight: 600; text-align: center;
+  }
+
+  .sentence-buttons {
+    display: flex; gap: 8px; width: 100%; max-width: 500px; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .sentence-buttons .btn { flex: 1; min-width: 100px; }
+
+  /* ===== STROKE ORDER OVERLAY ===== */
+  .stroke-overlay {
+    position: fixed; inset: 0; z-index: 5000;
+    background: rgba(20,20,19,0.6);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .stroke-overlay.active { opacity: 1; pointer-events: auto; }
+  .stroke-card {
+    background: var(--card-bg); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow-lg);
+    width: 90%; max-width: 360px; text-align: center;
+    transform: translateY(20px); transition: transform 0.25s;
+  }
+  .stroke-overlay.active .stroke-card { transform: translateY(0); }
+  .stroke-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--dark); }
+  .stroke-svg-area {
+    width: 200px; height: 200px; margin: 0 auto 12px;
+    background: var(--light); border-radius: var(--radius-sm);
+    border: 2px solid var(--light-gray);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .stroke-svg-area svg {
+    width: 180px; height: 180px;
+  }
+  .stroke-svg-area .grid-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .stroke-svg-area .grid-overlay::before,
+  .stroke-svg-area .grid-overlay::after {
+    content: ''; position: absolute; background: rgba(0,0,0,0.06);
+  }
+  .stroke-svg-area .grid-overlay::before { top: 50%; left: 5%; right: 5%; height: 1px; }
+  .stroke-svg-area .grid-overlay::after { left: 50%; top: 5%; bottom: 5%; width: 1px; }
+  .stroke-number {
+    font-size: 13px; color: var(--secondary); font-weight: 700; margin-bottom: 8px;
+  }
+  .stroke-controls {
+    display: flex; gap: 8px; justify-content: center; margin-top: 16px;
+  }
+  .stroke-controls .btn { min-width: 80px; }
+  @keyframes drawStroke {
+    from { stroke-dashoffset: var(--stroke-len); }
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* ===== STAR EFFECT ===== */
+  .star-container {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  }
+  .star {
+    position: absolute; font-size: 24px; animation: starFall 1s ease-out forwards;
+  }
+  @keyframes starFall {
+    0% { opacity: 1; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+    100% { opacity: 0; transform: scale(0.5) rotate(360deg) translateY(100px); }
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    background: var(--dark); color: white; padding: 12px 24px;
+    border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+    z-index: 10000; animation: toastIn 0.3s ease-out;
+    box-shadow: var(--shadow-lg);
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* ===== BIRD CHARACTER ===== */
+  .bird-char { display: inline-block; vertical-align: middle; }
+  .bird-char svg { display: block; }
+  .bird-char-title { animation: birdBounce 2s ease-in-out infinite; }
+  .bird-char-speech { animation: birdBounce 3s ease-in-out infinite; flex-shrink: 0; }
+  .bird-char-stamp { display: inline-block; }
+
+  /* ===== BACKGROUND BIRDS ===== */
+  .bg-birds {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .bg-bird {
+    position: absolute; opacity: 0;
+    animation: flyAcross var(--fly-duration, 18s) linear var(--fly-delay, 0s) infinite;
+  }
+  .bg-bird.fly-right {
+    animation-name: flyRight;
+  }
+  .bg-bird.fly-left {
+    animation-name: flyLeft;
+  }
+  @keyframes flyRight {
+    0% { opacity: 0; transform: translateX(-60px) translateY(0); }
+    5% { opacity: var(--bird-opacity, 0.18); }
+    90% { opacity: var(--bird-opacity, 0.18); }
+    100% { opacity: 0; transform: translateX(calc(100vw + 60px)) translateY(var(--fly-drift, -30px)); }
+  }
+  @keyframes flyLeft {
+    0% { opacity: 0; transform: translateX(calc(100vw + 60px)) translateY(0); }
+    5% { opacity: var(--bird-opacity, 0.18); }
+    90% { opacity: var(--bird-opacity, 0.18); }
+    100% { opacity: 0; transform: translateX(-60px) translateY(var(--fly-drift, 20px)); }
+  }
+  .bg-bird svg { animation: wingFlap 0.4s ease-in-out infinite alternate; }
+  @keyframes wingFlap {
+    0% { transform: scaleY(1); }
+    100% { transform: scaleY(0.92); }
+  }
+
+  .screen { position: relative; z-index: 1; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (min-width: 768px) {
+    .title-main { font-size: 42px; }
+    .kanji-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== BACKGROUND BIRDS ===== -->
+<div class="bg-birds" id="bgBirds"></div>
+
+<!-- ===== TITLE SCREEN ===== -->
+<div id="titleScreen" class="screen active">
+  <div style="display:flex;align-items:flex-end;gap:8px;">
+    <div class="title-bird" id="titleBird"></div>
+    <div class="title-bird" id="titleKenshin" style="animation-delay:-0.5s;"></div>
+  </div>
+  <h1 class="title-main">けんしんかんぺき<br>漢字ドリル</h1>
+  <p class="title-sub">小学1・2年生 全240字</p>
+  <div class="title-buttons">
+    <button class="btn btn-primary" onclick="showScreen('gradeScreen')">れんしゅうする</button>
+    <button class="btn btn-secondary" onclick="showScreen('stampScreen')">スタンプちょう</button>
+    <button class="btn btn-outline" onclick="sendReport()">レポートをおくる 📧</button>
+  </div>
+</div>
+
+<!-- ===== GRADE SELECT ===== -->
+<div id="gradeScreen" class="screen">
+  <div class="grade-header">
+    <div style="margin-bottom:8px;display:flex;align-items:flex-end;justify-content:center;gap:6px;">
+      <div id="gradeBird"></div>
+      <div id="gradeKenshin"></div>
+    </div>
+    <h2>けんしんくん、どの学年にする？</h2>
+    <p>きょうもがんばろう！</p>
+  </div>
+  <div class="grade-cards">
+    <div class="grade-card" onclick="selectGrade(1)">
+      <div class="grade-num">1</div>
+      <div class="grade-label">ねんせい</div>
+      <div class="grade-pct" id="grade1pct">0%</div>
+      <div class="grade-count" id="grade1count">0 / 80 字</div>
+      <div class="grade-progress"><div class="grade-progress-fill" id="grade1progress" style="width:0%"></div></div>
+    </div>
+    <div class="grade-card" onclick="selectGrade(2)">
+      <div class="grade-num">2</div>
+      <div class="grade-label">ねんせい</div>
+      <div class="grade-pct" id="grade2pct">0%</div>
+      <div class="grade-count" id="grade2count">0 / 160 字</div>
+      <div class="grade-progress"><div class="grade-progress-fill" id="grade2progress" style="width:0%"></div></div>
+    </div>
+  </div>
+  <button class="btn btn-outline" style="margin-top:24px;" onclick="showScreen('titleScreen')">もどる</button>
+</div>
+
+<!-- ===== KANJI LIST ===== -->
+<div id="kanjiListScreen" class="screen">
+  <div class="list-header">
+    <button class="back-btn" onclick="showScreen('gradeScreen')">←</button>
+    <h2 id="listTitle">1ねんせい</h2>
+    <button class="btn btn-sm btn-tertiary" id="sentenceTestBtn" onclick="startSentenceTest()">
+      📝 ぶんしょう
+    </button>
+    <button class="btn btn-sm btn-primary" id="retryBtn" style="display:none;" onclick="startRetry()">
+      まちがえた字だけ
+    </button>
+  </div>
+  <div id="retryBanner" class="retry-banner" style="display:none;">
+    <span>🔄 やりなおしモード</span>
+    <button class="btn btn-sm btn-outline" style="border-color:white;color:white;" onclick="exitRetry()">やめる</button>
+  </div>
+  <div class="kanji-grid" id="kanjiGrid"></div>
+</div>
+
+<!-- ===== PRACTICE SCREEN ===== -->
+<div id="practiceScreen" class="screen">
+  <div class="practice-top">
+    <button class="back-btn" onclick="exitPractice()">←</button>
+    <div class="practice-info">
+      <div class="kanji-reading" id="kanjiReading">おん: イチ / くん: ひと(つ)</div>
+      <div class="kanji-meaning" id="kanjiMeaning">いみ: ひとつ</div>
+    </div>
+    <div class="practice-progress-text" id="practiceProgress">1 / 80</div>
+  </div>
+
+  <div class="bird-speech">
+    <div class="bird-icon" id="speechBird"></div>
+    <div class="bird-text" id="birdMessage">お手本をよく見て、ていねいに書いてね！</div>
+    <div id="speechKenshin" style="flex-shrink:0;animation:birdBounce 3s ease-in-out infinite;animation-delay:-1s;line-height:0;"></div>
+  </div>
+
+  <div class="canvas-wrapper">
+    <div class="model-kanji" id="modelKanji">一</div>
+    <div class="grid-lines"></div>
+    <canvas id="drawCanvas"></canvas>
+  </div>
+
+  <div class="practice-buttons">
+    <button class="btn btn-sm btn-outline" onclick="clearCanvas()">けす</button>
+    <button class="btn btn-sm btn-tertiary" onclick="showStrokeOrder()">🖊️ かきじゅん</button>
+    <button class="btn btn-sm btn-primary" onclick="submitKanji()">できた！</button>
+    <button class="btn btn-sm btn-secondary" onclick="skipKanji()">つぎへ →</button>
+  </div>
+</div>
+
+<!-- ===== RESULT SCREEN ===== -->
+<div id="resultScreen" class="screen">
+  <div class="result-card">
+    <div style="margin-bottom:12px;display:flex;align-items:flex-end;justify-content:center;gap:6px;">
+      <div id="resultBird"></div>
+      <div id="resultKenshin"></div>
+    </div>
+    <h2 id="resultTitle">おつかれさま！</h2>
+    <div class="result-score" id="resultScore">0</div>
+    <div class="result-detail" id="resultDetail">10もん中 8もん せいかい！</div>
+  </div>
+  <div class="result-actions">
+    <button class="btn btn-primary" id="retryIncorrectBtn" onclick="retryIncorrect()">まちがえた字だけやりなおす</button>
+    <button class="btn btn-secondary" onclick="showScreen('kanjiListScreen')">もじ一らんへ</button>
+    <button class="btn btn-outline" onclick="showScreen('titleScreen')">タイトルへ</button>
+  </div>
+</div>
+
+<!-- ===== STAMP SCREEN ===== -->
+<div id="stampScreen" class="screen">
+  <div class="list-header">
+    <button class="back-btn" onclick="showScreen('titleScreen')">←</button>
+    <h2>スタンプちょう</h2>
+  </div>
+  <div class="stamp-header">
+    <p>けんしんくん、まいにちれんしゅうしてスタンプをあつめよう！</p>
+  </div>
+  <div class="streak-badge">
+    <div class="streak-num" id="streakNum">0</div>
+    <div class="streak-label">日れんぞく！</div>
+  </div>
+  <div class="stamp-calendar" id="stampCalendar"></div>
+  <div class="stamp-stats">
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">れんしゅう日数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statKanji">0</div>
+      <div class="stat-label">クリアした字</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statStreak">0</div>
+      <div class="stat-label">さいこうれんぞく</div>
+    </div>
+  </div>
+  <button class="btn btn-outline" style="margin-top:24px;width:100%;max-width:400px;" onclick="sendReport()">レポートをメールでおくる 📧</button>
+</div>
+
+<!-- ===== SENTENCE TEST SCREEN ===== -->
+<div id="sentenceScreen" class="screen">
+  <div class="sentence-top">
+    <button class="back-btn" onclick="exitSentenceTest()">←</button>
+    <div class="sentence-info">
+      <div class="sentence-label">📝 ぶんしょうテスト</div>
+    </div>
+    <div class="sentence-progress-text" id="sentenceProgress">1 / 10</div>
+  </div>
+
+  <div class="bird-speech">
+    <div class="bird-icon" id="sentenceBird"></div>
+    <div class="bird-text" id="sentenceBirdMessage">ぶんしょうをよんで、あてはまる漢字をかこう！</div>
+    <div id="sentenceKenshin" style="flex-shrink:0;animation:birdBounce 3s ease-in-out infinite;animation-delay:-1s;line-height:0;"></div>
+  </div>
+
+  <div class="sentence-card">
+    <div class="sentence-text" id="sentenceText"></div>
+    <div class="sentence-hint" id="sentenceHint"></div>
+  </div>
+
+  <div class="sentence-canvas-area">
+    <div>
+      <div class="sentence-answer-label">こたえ ↓</div>
+      <div class="sentence-canvas-wrapper">
+        <div class="grid-lines"></div>
+        <canvas id="sentenceCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="sentence-buttons">
+    <button class="btn btn-sm btn-outline" onclick="clearSentenceCanvas()">けす</button>
+    <button class="btn btn-sm btn-tertiary" onclick="showSentenceStrokeOrder()">🖊️ ヒント</button>
+    <button class="btn btn-sm btn-primary" onclick="submitSentenceAnswer()">できた！</button>
+    <button class="btn btn-sm btn-secondary" onclick="skipSentence()">つぎへ →</button>
+  </div>
+</div>
+
+<!-- ===== STROKE ORDER OVERLAY ===== -->
+<div class="stroke-overlay" id="strokeOverlay" onclick="closeStrokeOrder(event)">
+  <div class="stroke-card" onclick="event.stopPropagation()">
+    <h3>かきじゅん 🖊️</h3>
+    <div class="stroke-number" id="strokeNumber">1 / 4 かくめ</div>
+    <div class="stroke-svg-area">
+      <div class="grid-overlay"></div>
+      <div id="strokeSvgContainer"></div>
+    </div>
+    <div class="stroke-controls">
+      <button class="btn btn-sm btn-outline" onclick="replayStrokeOrder()">もういちど ↻</button>
+      <button class="btn btn-sm btn-primary" onclick="closeStrokeOrderBtn()">とじる</button>
+    </div>
+  </div>
+</div>
+
+<!-- Star effect container -->
+<div class="star-container" id="starContainer"></div>
+
+<script>
+// ===== 3D CHARACTERS (JJ+F City Shop style) =====
+let birdIdCounter = 0;
+
+// --- 3D Budgie (Sekisei Inko) - ぷっくり立体キャラ ---
+function createBirdSVG(size, mood) {
+  const m = mood || 'normal';
+  const uid = 'b' + (birdIdCounter++);
+
+  let eyes, mouthSvg, extras = '';
+
+  if (m === 'happy' || m === 'cheer') {
+    eyes = `
+      <ellipse cx="40" cy="42" rx="7" ry="8" fill="white"/>
+      <circle cx="41" cy="43" r="5" fill="#1a1a2e"/>
+      <circle cx="43" cy="41" r="2" fill="white"/>
+      <ellipse cx="62" cy="42" rx="7" ry="8" fill="white"/>
+      <circle cx="61" cy="43" r="5" fill="#1a1a2e"/>
+      <circle cx="63" cy="41" r="2" fill="white"/>`;
+    mouthSvg = m === 'cheer'
+      ? `<ellipse cx="51" cy="58" rx="5" ry="4" fill="#e07830"/><ellipse cx="51" cy="57" rx="4" ry="2.5" fill="#f09848"/>`
+      : `<path d="M44 56 Q51 62 58 56" stroke="#c07020" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    extras = `<ellipse cx="30" cy="50" rx="7" ry="5" fill="#ff8888" opacity="0.35"/>
+              <ellipse cx="72" cy="50" rx="7" ry="5" fill="#ff8888" opacity="0.35"/>`;
+    if (m === 'cheer') extras += `
+      <circle cx="16" cy="22" r="3" fill="#d97757" opacity="0.6"/>
+      <circle cx="12" cy="30" r="2" fill="#6a9bcc" opacity="0.5"/>
+      <circle cx="86" cy="20" r="2.5" fill="#788c5d" opacity="0.5"/>
+      <circle cx="90" cy="28" r="2" fill="#d97757" opacity="0.4"/>`;
+  } else if (m === 'thinking') {
+    eyes = `
+      <ellipse cx="42" cy="42" rx="7" ry="8" fill="white"/>
+      <circle cx="44" cy="43" r="5" fill="#1a1a2e"/>
+      <circle cx="46" cy="41" r="2" fill="white"/>
+      <ellipse cx="63" cy="42" rx="7" ry="8" fill="white"/>
+      <circle cx="65" cy="43" r="5" fill="#1a1a2e"/>
+      <circle cx="67" cy="41" r="2" fill="white"/>`;
+    mouthSvg = `<path d="M46 57 Q51 55 56 57" stroke="#c07020" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    extras = `<text x="78" y="24" font-size="16" font-weight="bold" fill="#b0aea5" font-family="Poppins,sans-serif">?</text>`;
+  } else {
+    eyes = `
+      <ellipse cx="40" cy="42" rx="7" ry="8" fill="white"/>
+      <circle cx="41" cy="43" r="5" fill="#1a1a2e"/>
+      <circle cx="43" cy="41" r="2" fill="white"/>
+      <ellipse cx="62" cy="42" rx="7" ry="8" fill="white"/>
+      <circle cx="61" cy="43" r="5" fill="#1a1a2e"/>
+      <circle cx="63" cy="41" r="2" fill="white"/>`;
+    mouthSvg = `<path d="M44 56 Q51 60 58 56" stroke="#c07020" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    extras = `<ellipse cx="30" cy="50" rx="6" ry="4" fill="#ff8888" opacity="0.25"/>
+              <ellipse cx="72" cy="50" rx="6" ry="4" fill="#ff8888" opacity="0.25"/>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" width="${size}" height="${size*1.3}">
+  <defs>
+    <radialGradient id="bb${uid}" cx="42%" cy="30%">
+      <stop offset="0%" stop-color="#7ee650"/><stop offset="50%" stop-color="#50c830"/><stop offset="100%" stop-color="#38a018"/>
+    </radialGradient>
+    <radialGradient id="bh${uid}" cx="42%" cy="28%">
+      <stop offset="0%" stop-color="#fff8d0"/><stop offset="50%" stop-color="#ffe040"/><stop offset="100%" stop-color="#e8c820"/>
+    </radialGradient>
+    <radialGradient id="bl${uid}" cx="50%" cy="35%">
+      <stop offset="0%" stop-color="#b8f080"/><stop offset="100%" stop-color="#50c830" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bs${uid}"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.18"/></filter>
+  </defs>
+  <!-- Ground shadow -->
+  <ellipse cx="51" cy="126" rx="28" ry="5" fill="rgba(0,0,0,0.10)"/>
+  <!-- Tail -->
+  <path d="M38 100 Q32 116 28 122 Q34 112 38 104Z" fill="#38a018" opacity="0.7"/>
+  <path d="M51 100 Q51 118 49 124 Q51 114 53 104Z" fill="#309018" opacity="0.7"/>
+  <path d="M64 100 Q70 116 74 122 Q68 112 64 104Z" fill="#38a018" opacity="0.7"/>
+  <!-- Left leg -->
+  <rect x="36" y="108" width="8" height="14" rx="4" fill="#e8b040" filter="url(#bs${uid})"/>
+  <ellipse cx="40" cy="122" rx="7" ry="3" fill="#e8b040"/>
+  <!-- Right leg -->
+  <rect x="58" y="108" width="8" height="14" rx="4" fill="#e8b040" filter="url(#bs${uid})"/>
+  <ellipse cx="62" cy="122" rx="7" ry="3" fill="#e8b040"/>
+  <!-- Body -->
+  <ellipse cx="51" cy="82" rx="30" ry="32" fill="url(#bb${uid})" filter="url(#bs${uid})"/>
+  <ellipse cx="51" cy="78" rx="20" ry="22" fill="url(#bl${uid})"/>
+  <!-- Wing left -->
+  <ellipse cx="22" cy="80" rx="10" ry="18" fill="#40b020" transform="rotate(-8,22,80)" filter="url(#bs${uid})"/>
+  <ellipse cx="22" cy="78" rx="6" ry="12" fill="#4cc028" transform="rotate(-8,22,78)"/>
+  <!-- Wing right -->
+  <ellipse cx="80" cy="80" rx="10" ry="18" fill="#40b020" transform="rotate(8,80,80)" filter="url(#bs${uid})"/>
+  <ellipse cx="80" cy="78" rx="6" ry="12" fill="#4cc028" transform="rotate(8,80,78)"/>
+  <!-- Head -->
+  <circle cx="51" cy="38" r="30" fill="url(#bh${uid})" filter="url(#bs${uid})"/>
+  <!-- Head highlight -->
+  <ellipse cx="44" cy="24" rx="14" ry="8" fill="white" opacity="0.18"/>
+  <!-- Budgie stripes -->
+  <path d="M28 20 Q34 17 40 20" stroke="#333" stroke-width="1" fill="none" opacity="0.2"/>
+  <path d="M32 15 Q38 12 44 15" stroke="#333" stroke-width="0.8" fill="none" opacity="0.15"/>
+  <path d="M60 20 Q66 17 72 20" stroke="#333" stroke-width="1" fill="none" opacity="0.2"/>
+  <path d="M62 15 Q68 12 74 15" stroke="#333" stroke-width="0.8" fill="none" opacity="0.15"/>
+  <!-- Eyes -->
+  ${eyes}
+  <!-- Cere (nose) -->
+  <ellipse cx="51" cy="48" rx="6" ry="3" fill="#7888cc" opacity="0.5"/>
+  <!-- Beak -->
+  <path d="M42 52 Q51 64 60 52 Q56 56 51 55 Q46 56 42 52Z" fill="#e8a030" filter="url(#bs${uid})"/>
+  <path d="M44 52.5 Q51 60 58 52.5" fill="#f0c050" opacity="0.45"/>
+  <!-- Mouth -->
+  ${mouthSvg}
+  ${extras}
+  </svg>`;
+}
+
+// --- Kenshin-kun character - ぷっくり3D boy ---
+function createKenshinSVG(size, mood) {
+  const m = mood || 'normal';
+  const uid = 'k' + (birdIdCounter++);
+
+  let eyes, mouthSvg, extras = '';
+
+  if (m === 'happy' || m === 'cheer') {
+    eyes = `
+      <ellipse cx="42" cy="52" rx="6" ry="7" fill="white"/>
+      <circle cx="43" cy="53" r="4.5" fill="#1a1a2e"/>
+      <circle cx="45" cy="51" r="1.8" fill="white"/>
+      <ellipse cx="62" cy="52" rx="6" ry="7" fill="white"/>
+      <circle cx="61" cy="53" r="4.5" fill="#1a1a2e"/>
+      <circle cx="63" cy="51" r="1.8" fill="white"/>`;
+    mouthSvg = m === 'cheer'
+      ? `<path d="M44 64 Q52 74 60 64" fill="#e05040" stroke="#c04030" stroke-width="0.5"/>
+         <path d="M46 64 Q52 67 58 64" fill="white" opacity="0.9"/>`
+      : `<path d="M44 64 Q52 72 60 64" fill="#e05040" stroke="#c04030" stroke-width="0.5"/>
+         <path d="M46 64 Q52 66 58 64" fill="white" opacity="0.9"/>`;
+    extras = `<ellipse cx="33" cy="60" rx="6" ry="4" fill="#ff8888" opacity="0.35"/>
+              <ellipse cx="71" cy="60" rx="6" ry="4" fill="#ff8888" opacity="0.35"/>`;
+    if (m === 'cheer') extras += `
+      <circle cx="16" cy="28" r="3" fill="#d97757" opacity="0.6"/>
+      <circle cx="88" cy="25" r="2.5" fill="#6a9bcc" opacity="0.5"/>
+      <circle cx="12" cy="36" r="2" fill="#788c5d" opacity="0.5"/>`;
+  } else if (m === 'thinking') {
+    eyes = `
+      <ellipse cx="44" cy="52" rx="6" ry="7" fill="white"/>
+      <circle cx="46" cy="53" r="4.5" fill="#1a1a2e"/>
+      <circle cx="48" cy="51" r="1.8" fill="white"/>
+      <ellipse cx="63" cy="52" rx="6" ry="7" fill="white"/>
+      <circle cx="65" cy="53" r="4.5" fill="#1a1a2e"/>
+      <circle cx="67" cy="51" r="1.8" fill="white"/>`;
+    mouthSvg = `<path d="M47 66 Q52 64 57 66" stroke="#c08080" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    extras = `<text x="78" y="30" font-size="16" font-weight="bold" fill="#b0aea5" font-family="Poppins,sans-serif">?</text>`;
+  } else {
+    eyes = `
+      <ellipse cx="42" cy="52" rx="6" ry="7" fill="white"/>
+      <circle cx="43" cy="53" r="4.5" fill="#1a1a2e"/>
+      <circle cx="45" cy="51" r="1.8" fill="white"/>
+      <ellipse cx="62" cy="52" rx="6" ry="7" fill="white"/>
+      <circle cx="61" cy="53" r="4.5" fill="#1a1a2e"/>
+      <circle cx="63" cy="51" r="1.8" fill="white"/>`;
+    mouthSvg = `<path d="M44 64 Q52 70 60 64" fill="#e05040" stroke="#c04030" stroke-width="0.5"/>
+                <path d="M46 64 Q52 66 58 64" fill="white" opacity="0.9"/>`;
+    extras = `<ellipse cx="33" cy="60" rx="5" ry="3.5" fill="#ff8888" opacity="0.25"/>
+              <ellipse cx="71" cy="60" rx="5" ry="3.5" fill="#ff8888" opacity="0.25"/>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140" width="${size}" height="${size*1.4}">
+  <defs>
+    <radialGradient id="jb${uid}" cx="40%" cy="30%">
+      <stop offset="0%" stop-color="#ffc840"/><stop offset="50%" stop-color="#f0a820"/><stop offset="100%" stop-color="#d89018"/>
+    </radialGradient>
+    <radialGradient id="jh${uid}" cx="45%" cy="30%">
+      <stop offset="0%" stop-color="#ffe8cc"/><stop offset="60%" stop-color="#f0c8a0"/><stop offset="100%" stop-color="#e0b090"/>
+    </radialGradient>
+    <radialGradient id="jl${uid}" cx="50%" cy="30%">
+      <stop offset="0%" stop-color="#ffd860"/><stop offset="100%" stop-color="#f0a820" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="js${uid}"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.18"/></filter>
+  </defs>
+  <!-- Ground shadow -->
+  <ellipse cx="52" cy="136" rx="26" ry="5" fill="rgba(0,0,0,0.10)"/>
+  <!-- Left leg (blue shorts + white shoe) -->
+  <rect x="36" y="112" width="10" height="10" rx="4" fill="#4488cc"/>
+  <ellipse cx="41" cy="126" rx="9" ry="5" fill="white" filter="url(#js${uid})"/>
+  <ellipse cx="41" cy="125" rx="7" ry="3.5" fill="#f0f0f0"/>
+  <!-- Right leg -->
+  <rect x="56" y="112" width="10" height="10" rx="4" fill="#4488cc"/>
+  <ellipse cx="61" cy="126" rx="9" ry="5" fill="white" filter="url(#js${uid})"/>
+  <ellipse cx="61" cy="125" rx="7" ry="3.5" fill="#f0f0f0"/>
+  <!-- Body (yellow puffy jacket) -->
+  <ellipse cx="52" cy="92" rx="28" ry="28" fill="url(#jb${uid})" filter="url(#js${uid})"/>
+  <ellipse cx="52" cy="88" rx="18" ry="18" fill="url(#jl${uid})"/>
+  <!-- Zipper line -->
+  <line x1="52" y1="70" x2="52" y2="110" stroke="#d08818" stroke-width="1.5" opacity="0.3"/>
+  <!-- Left arm (puffy) + white hand -->
+  <ellipse cx="20" cy="88" rx="10" ry="14" fill="#f0a820" transform="rotate(12,20,88)" filter="url(#js${uid})"/>
+  <circle cx="16" cy="100" r="8" fill="white" filter="url(#js${uid})"/>
+  <circle cx="16" cy="99" r="6" fill="#f8f8f8"/>
+  <!-- Right arm + hand -->
+  <ellipse cx="82" cy="86" rx="10" ry="14" fill="#f0a820" transform="rotate(-15,82,86)" filter="url(#js${uid})"/>
+  <circle cx="88" cy="96" r="8" fill="white" filter="url(#js${uid})"/>
+  <circle cx="88" cy="95" r="6" fill="#f8f8f8"/>
+  <!-- Head -->
+  <circle cx="52" cy="42" r="30" fill="url(#jh${uid})" filter="url(#js${uid})"/>
+  <!-- Head highlight -->
+  <ellipse cx="44" cy="28" rx="14" ry="8" fill="white" opacity="0.15"/>
+  <!-- Hair (black, straight bangs like photo) -->
+  <path d="M22 38 Q22 10 52 8 Q82 10 82 38 Q78 28 52 26 Q26 28 22 38Z" fill="#1a1a2e" filter="url(#js${uid})"/>
+  <!-- Bangs -->
+  <path d="M28 34 Q32 24 40 28 Q36 30 28 34Z" fill="#252540"/>
+  <path d="M38 30 Q42 22 50 26 Q46 28 38 30Z" fill="#252540"/>
+  <path d="M48 28 Q54 20 62 26 Q56 28 48 28Z" fill="#252540"/>
+  <path d="M60 28 Q66 22 74 32 Q68 28 60 28Z" fill="#252540"/>
+  <!-- Hair shine -->
+  <path d="M36 22 Q42 18 48 22" stroke="white" stroke-width="1.5" fill="none" opacity="0.15"/>
+  <!-- Eyes -->
+  ${eyes}
+  <!-- Eyebrows -->
+  <path d="M36 46 Q42 43 48 46" stroke="#1a1a2e" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <path d="M56 46 Q62 43 68 46" stroke="#1a1a2e" stroke-width="1.5" fill="none" opacity="0.3"/>
+  <!-- Nose -->
+  <ellipse cx="52" cy="60" rx="2" ry="1.5" fill="#d0a080" opacity="0.4"/>
+  <!-- Mouth -->
+  ${mouthSvg}
+  ${extras}
+  </svg>`;
+}
+
+function placeBird(elementId, size, mood) {
+  const el = document.getElementById(elementId);
+  if (el) el.innerHTML = createBirdSVG(size, mood);
+}
+
+function placeKenshin(elementId, size, mood) {
+  const el = document.getElementById(elementId);
+  if (el) el.innerHTML = createKenshinSVG(size, mood);
+}
+
+// ===== BACKGROUND BIRD SPECIES =====
+function createSpeciesSVG(species, size) {
+  const s = size || 40;
+  const uid = 'sp' + (birdIdCounter++);
+  const birds = {
+    // ハクセキレイ - 白と黒のスリムな鳥
+    hakusekirei: `<svg viewBox="0 0 100 80" width="${s}" height="${s*0.8}">
+      <defs><radialGradient id="hb${uid}" cx="45%" cy="35%"><stop offset="0%" stop-color="#f8f8f8"/><stop offset="100%" stop-color="#e0e0e0"/></radialGradient></defs>
+      <path d="M70 50 Q80 48 92 52 Q85 50 78 52Z" fill="#666" opacity="0.7"/>
+      <ellipse cx="48" cy="45" rx="22" ry="14" fill="url(#hb${uid})"/>
+      <ellipse cx="48" cy="42" rx="14" ry="9" fill="#f0f0f0"/>
+      <circle cx="34" cy="35" r="12" fill="white" stroke="#ddd" stroke-width="0.5"/>
+      <path d="M30 32 Q32 28 36 30" fill="#333" opacity="0.8"/>
+      <ellipse cx="30" cy="34" rx="3" ry="3.5" fill="white"/><circle cx="30" cy="34.5" r="2" fill="#141413"/><circle cx="30.5" cy="33.5" r="0.7" fill="white"/>
+      <path d="M23 36 L18 37 L23 38Z" fill="#333"/>
+      <path d="M42 56 L40 66 M46 56 L44 66" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M24 28 Q28 24 32 27" fill="#141413"/>
+    </svg>`,
+
+    // ハト - ぽっちゃりグレー
+    hato: `<svg viewBox="0 0 100 90" width="${s}" height="${s*0.9}">
+      <defs><radialGradient id="hg${uid}" cx="40%" cy="35%"><stop offset="0%" stop-color="#c8c0d0"/><stop offset="100%" stop-color="#908898"/></radialGradient></defs>
+      <path d="M68 55 Q78 50 88 54 Q80 52 72 55Z" fill="#807088" opacity="0.6"/>
+      <ellipse cx="48" cy="52" rx="26" ry="20" fill="url(#hg${uid})"/>
+      <ellipse cx="48" cy="48" rx="16" ry="12" fill="#b8b0c0"/>
+      <circle cx="34" cy="36" r="14" fill="#c0b8c8" stroke="#a098a8" stroke-width="0.5"/>
+      <ellipse cx="30" cy="35" rx="3.5" ry="4" fill="white"/><circle cx="30" cy="35.5" r="2.2" fill="#d97757"/><circle cx="30.5" cy="34.5" r="0.8" fill="white"/>
+      <path d="M22 38 L15 37 L22 40Z" fill="#e8a030"/>
+      <ellipse cx="31" cy="30" rx="4" ry="2" fill="#a0d8a0" opacity="0.6"/>
+      <path d="M42 68 L40 78 M48 68 L46 78" stroke="#cc6666" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
+
+    // スズメ - 小さくてまるまる茶色
+    suzume: `<svg viewBox="0 0 100 85" width="${s*0.8}" height="${s*0.68}">
+      <defs><radialGradient id="sg${uid}" cx="45%" cy="35%"><stop offset="0%" stop-color="#d4a060"/><stop offset="100%" stop-color="#a07840"/></radialGradient></defs>
+      <path d="M65 48 Q72 45 80 48 Q74 46 68 48Z" fill="#8a6830" opacity="0.6"/>
+      <ellipse cx="45" cy="48" rx="20" ry="16" fill="url(#sg${uid})"/>
+      <ellipse cx="45" cy="44" rx="12" ry="10" fill="#e8d0a8"/>
+      <circle cx="34" cy="34" r="12" fill="#c8a060" stroke="#b09050" stroke-width="0.5"/>
+      <ellipse cx="30" cy="33" rx="3" ry="3.5" fill="white"/><circle cx="30" cy="33.5" r="2" fill="#141413"/><circle cx="30.5" cy="32.5" r="0.7" fill="white"/>
+      <path d="M22 36 L17 35.5 L22 37.5Z" fill="#e0a030"/>
+      <ellipse cx="34" cy="38" rx="5" ry="3" fill="#141413" opacity="0.15"/>
+      <path d="M38 60 L36 68 M44 60 L42 68" stroke="#cc9966" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M28 28 Q32 24 36 28" fill="#8a6030" opacity="0.7"/>
+    </svg>`,
+
+    // ワライカワセミ - 大きなくちばし、青い羽
+    warai: `<svg viewBox="0 0 110 90" width="${s*1.1}" height="${s*0.9}">
+      <defs><radialGradient id="wg${uid}" cx="45%" cy="35%"><stop offset="0%" stop-color="#5090c0"/><stop offset="100%" stop-color="#306888"/></radialGradient></defs>
+      <path d="M72 52 Q82 48 95 52 Q86 50 76 52Z" fill="#306080" opacity="0.6"/>
+      <ellipse cx="50" cy="52" rx="24" ry="18" fill="url(#wg${uid})"/>
+      <ellipse cx="50" cy="48" rx="15" ry="11" fill="#e8e0d0"/>
+      <circle cx="36" cy="34" r="14" fill="#f0e8d8" stroke="#d8d0c0" stroke-width="0.5"/>
+      <path d="M30 28 Q36 24 42 28" fill="#6a4020" opacity="0.5"/>
+      <ellipse cx="32" cy="33" rx="3.5" ry="4" fill="white"/><circle cx="32" cy="33.5" r="2.2" fill="#141413"/><circle cx="32.5" cy="32.5" r="0.8" fill="white"/>
+      <path d="M24 36 L8 34 L24 38Z" fill="#555" stroke="#444" stroke-width="0.3"/>
+      <path d="M44 68 L42 78 M50 68 L48 78" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+
+    // ワシ - 力強い、茶色と白
+    washi: `<svg viewBox="0 0 120 90" width="${s*1.3}" height="${s*0.95}">
+      <defs><radialGradient id="eg${uid}" cx="45%" cy="35%"><stop offset="0%" stop-color="#6a4828"/><stop offset="100%" stop-color="#3a2818"/></radialGradient></defs>
+      <path d="M18 42 Q8 35 2 40 Q10 38 20 42Z" fill="#4a3018" opacity="0.7"/>
+      <path d="M82 42 Q92 35 98 40 Q90 38 80 42Z" fill="#4a3018" opacity="0.7"/>
+      <ellipse cx="55" cy="48" rx="28" ry="18" fill="url(#eg${uid})"/>
+      <ellipse cx="55" cy="44" rx="16" ry="11" fill="#f8f0e0"/>
+      <circle cx="42" cy="32" r="14" fill="#e8ddd0" stroke="#c8b8a0" stroke-width="0.5"/>
+      <ellipse cx="38" cy="31" rx="3.5" ry="4" fill="white"/><circle cx="38" cy="31.5" r="2.5" fill="#d4a020"/><circle cx="37.5" cy="30.5" r="0.8" fill="white"/>
+      <path d="M30 34 L22 33 Q28 36 30 35Z" fill="#e0a020" stroke="#c08020" stroke-width="0.3"/>
+      <path d="M50 62 L48 72 M56 62 L54 72" stroke="#e0a020" stroke-width="2" stroke-linecap="round"/>
+    </svg>`,
+
+    // トンビ - 赤茶色、飛んでるシルエット
+    tonbi: `<svg viewBox="0 0 120 80" width="${s*1.3}" height="${s*0.85}">
+      <defs><radialGradient id="tg${uid}" cx="45%" cy="35%"><stop offset="0%" stop-color="#a06030"/><stop offset="100%" stop-color="#6a3818"/></radialGradient></defs>
+      <path d="M15 38 Q5 32 0 36 Q8 34 18 38Z" fill="#804020" opacity="0.7"/>
+      <path d="M85 38 Q95 32 100 36 Q92 34 82 38Z" fill="#804020" opacity="0.7"/>
+      <path d="M65 48 Q75 46 90 52 Q78 48 68 50Z" fill="#6a3818" opacity="0.6"/>
+      <ellipse cx="52" cy="44" rx="26" ry="16" fill="url(#tg${uid})"/>
+      <ellipse cx="52" cy="40" rx="14" ry="10" fill="#c89060"/>
+      <circle cx="38" cy="30" r="12" fill="#b88050" stroke="#a07040" stroke-width="0.5"/>
+      <ellipse cx="35" cy="29" rx="3" ry="3.5" fill="white"/><circle cx="35" cy="29.5" r="2" fill="#e0a020"/><circle cx="35.5" cy="28.5" r="0.7" fill="white"/>
+      <path d="M28 32 L20 31 Q26 34 28 33Z" fill="#555" stroke="#444" stroke-width="0.3"/>
+    </svg>`
+  };
+  return birds[species] || birds.suzume;
+}
+
+function initBackgroundBirds() {
+  const container = document.getElementById('bgBirds');
+  if (!container) return;
+
+  const species = ['hakusekirei','hato','suzume','warai','washi','tonbi'];
+  const configs = [
+    { sp: 'suzume',       size: 28, top: '8%',  dir: 'right', dur: '22s', delay: '0s',   drift: '-20px', opacity: 0.13 },
+    { sp: 'hato',         size: 36, top: '18%', dir: 'left',  dur: '28s', delay: '4s',   drift: '15px',  opacity: 0.12 },
+    { sp: 'hakusekirei',  size: 26, top: '32%', dir: 'right', dur: '20s', delay: '8s',   drift: '-25px', opacity: 0.10 },
+    { sp: 'tonbi',        size: 44, top: '12%', dir: 'left',  dur: '35s', delay: '2s',   drift: '10px',  opacity: 0.09 },
+    { sp: 'warai',        size: 32, top: '55%', dir: 'right', dur: '25s', delay: '12s',  drift: '-15px', opacity: 0.11 },
+    { sp: 'washi',        size: 48, top: '5%',  dir: 'left',  dur: '40s', delay: '6s',   drift: '8px',   opacity: 0.07 },
+    { sp: 'suzume',       size: 22, top: '70%', dir: 'right', dur: '18s', delay: '15s',  drift: '-30px', opacity: 0.12 },
+    { sp: 'hato',         size: 30, top: '42%', dir: 'left',  dur: '30s', delay: '10s',  drift: '20px',  opacity: 0.10 },
+    { sp: 'hakusekirei',  size: 24, top: '82%', dir: 'right', dur: '22s', delay: '20s',  drift: '-18px', opacity: 0.11 },
+    { sp: 'tonbi',        size: 38, top: '28%', dir: 'right', dur: '32s', delay: '18s',  drift: '-12px', opacity: 0.08 },
+    { sp: 'warai',        size: 28, top: '65%', dir: 'left',  dur: '24s', delay: '14s',  drift: '22px',  opacity: 0.10 },
+    { sp: 'suzume',       size: 20, top: '48%', dir: 'right', dur: '16s', delay: '7s',   drift: '-28px', opacity: 0.14 },
+  ];
+
+  configs.forEach(c => {
+    const div = document.createElement('div');
+    div.className = `bg-bird fly-${c.dir}`;
+    div.style.top = c.top;
+    div.style.setProperty('--fly-duration', c.dur);
+    div.style.setProperty('--fly-delay', c.delay);
+    div.style.setProperty('--fly-drift', c.drift);
+    div.style.setProperty('--bird-opacity', c.opacity);
+    div.innerHTML = createSpeciesSVG(c.sp, c.size);
+    container.appendChild(div);
+  });
+}
+
+// ===== KANJI DATA =====
+const GRADE1 = [
+  {k:'一',on:'イチ・イツ',kun:'ひと(つ)',m:'one'},
+  {k:'二',on:'ニ',kun:'ふた(つ)',m:'two'},
+  {k:'三',on:'サン',kun:'み(つ)',m:'three'},
+  {k:'四',on:'シ',kun:'よ(つ)・よん',m:'four'},
+  {k:'五',on:'ゴ',kun:'いつ(つ)',m:'five'},
+  {k:'六',on:'ロク',kun:'む(つ)',m:'six'},
+  {k:'七',on:'シチ',kun:'なな(つ)',m:'seven'},
+  {k:'八',on:'ハチ',kun:'や(つ)',m:'eight'},
+  {k:'九',on:'キュウ・ク',kun:'ここの(つ)',m:'nine'},
+  {k:'十',on:'ジュウ',kun:'とお',m:'ten'},
+  {k:'百',on:'ヒャク',kun:'',m:'hundred'},
+  {k:'千',on:'セン',kun:'ち',m:'thousand'},
+  {k:'上',on:'ジョウ・ショウ',kun:'うえ・あ(がる)',m:'up/above'},
+  {k:'下',on:'カ・ゲ',kun:'した・さ(がる)',m:'down/below'},
+  {k:'左',on:'サ',kun:'ひだり',m:'left'},
+  {k:'右',on:'ウ・ユウ',kun:'みぎ',m:'right'},
+  {k:'中',on:'チュウ',kun:'なか',m:'middle'},
+  {k:'大',on:'ダイ・タイ',kun:'おお(きい)',m:'big'},
+  {k:'小',on:'ショウ',kun:'ちい(さい)・こ',m:'small'},
+  {k:'月',on:'ゲツ・ガツ',kun:'つき',m:'moon/month'},
+  {k:'日',on:'ニチ・ジツ',kun:'ひ・か',m:'day/sun'},
+  {k:'年',on:'ネン',kun:'とし',m:'year'},
+  {k:'早',on:'ソウ',kun:'はや(い)',m:'early'},
+  {k:'木',on:'モク・ボク',kun:'き',m:'tree'},
+  {k:'林',on:'リン',kun:'はやし',m:'grove'},
+  {k:'森',on:'シン',kun:'もり',m:'forest'},
+  {k:'山',on:'サン',kun:'やま',m:'mountain'},
+  {k:'川',on:'セン',kun:'かわ',m:'river'},
+  {k:'土',on:'ド・ト',kun:'つち',m:'earth/soil'},
+  {k:'空',on:'クウ',kun:'そら・あ(く)',m:'sky/empty'},
+  {k:'田',on:'デン',kun:'た',m:'rice field'},
+  {k:'天',on:'テン',kun:'あま・あめ',m:'heaven/sky'},
+  {k:'生',on:'セイ・ショウ',kun:'い(きる)・う(まれる)',m:'life/birth'},
+  {k:'花',on:'カ',kun:'はな',m:'flower'},
+  {k:'草',on:'ソウ',kun:'くさ',m:'grass'},
+  {k:'虫',on:'チュウ',kun:'むし',m:'insect'},
+  {k:'犬',on:'ケン',kun:'いぬ',m:'dog'},
+  {k:'人',on:'ジン・ニン',kun:'ひと',m:'person'},
+  {k:'名',on:'メイ・ミョウ',kun:'な',m:'name'},
+  {k:'女',on:'ジョ',kun:'おんな',m:'woman'},
+  {k:'男',on:'ダン',kun:'おとこ',m:'man'},
+  {k:'子',on:'シ・ス',kun:'こ',m:'child'},
+  {k:'目',on:'モク',kun:'め',m:'eye'},
+  {k:'耳',on:'ジ',kun:'みみ',m:'ear'},
+  {k:'口',on:'コウ・ク',kun:'くち',m:'mouth'},
+  {k:'手',on:'シュ',kun:'て',m:'hand'},
+  {k:'足',on:'ソク',kun:'あし・た(りる)',m:'foot/leg'},
+  {k:'見',on:'ケン',kun:'み(る)',m:'see'},
+  {k:'音',on:'オン・イン',kun:'おと',m:'sound'},
+  {k:'力',on:'リョク・リキ',kun:'ちから',m:'power'},
+  {k:'気',on:'キ・ケ',kun:'',m:'spirit/energy'},
+  {k:'円',on:'エン',kun:'まる(い)',m:'circle/yen'},
+  {k:'入',on:'ニュウ',kun:'い(る)・はい(る)',m:'enter'},
+  {k:'出',on:'シュツ',kun:'で(る)・だ(す)',m:'exit/put out'},
+  {k:'立',on:'リツ',kun:'た(つ)',m:'stand'},
+  {k:'休',on:'キュウ',kun:'やす(む)',m:'rest'},
+  {k:'先',on:'セン',kun:'さき',m:'before/ahead'},
+  {k:'夕',on:'セキ',kun:'ゆう',m:'evening'},
+  {k:'本',on:'ホン',kun:'もと',m:'book/origin'},
+  {k:'文',on:'ブン・モン',kun:'ふみ',m:'writing'},
+  {k:'字',on:'ジ',kun:'あざ',m:'character'},
+  {k:'学',on:'ガク',kun:'まな(ぶ)',m:'study'},
+  {k:'校',on:'コウ',kun:'',m:'school'},
+  {k:'村',on:'ソン',kun:'むら',m:'village'},
+  {k:'町',on:'チョウ',kun:'まち',m:'town'},
+  {k:'正',on:'セイ・ショウ',kun:'ただ(しい)',m:'correct'},
+  {k:'水',on:'スイ',kun:'みず',m:'water'},
+  {k:'火',on:'カ',kun:'ひ',m:'fire'},
+  {k:'玉',on:'ギョク',kun:'たま',m:'ball/jewel'},
+  {k:'王',on:'オウ',kun:'',m:'king'},
+  {k:'石',on:'セキ・シャク',kun:'いし',m:'stone'},
+  {k:'竹',on:'チク',kun:'たけ',m:'bamboo'},
+  {k:'糸',on:'シ',kun:'いと',m:'thread'},
+  {k:'貝',on:'バイ',kun:'かい',m:'shellfish'},
+  {k:'車',on:'シャ',kun:'くるま',m:'car/vehicle'},
+  {k:'金',on:'キン・コン',kun:'かね',m:'gold/money'},
+  {k:'雨',on:'ウ',kun:'あめ',m:'rain'},
+  {k:'赤',on:'セキ',kun:'あか(い)',m:'red'},
+  {k:'青',on:'セイ',kun:'あお(い)',m:'blue'},
+  {k:'白',on:'ハク',kun:'しろ(い)',m:'white'}
+];
+
+const GRADE2 = [
+  {k:'刀',on:'トウ',kun:'かたな',m:'sword'},
+  {k:'万',on:'マン・バン',kun:'',m:'ten thousand'},
+  {k:'丸',on:'ガン',kun:'まる(い)',m:'round'},
+  {k:'交',on:'コウ',kun:'まじ(わる)',m:'intersect'},
+  {k:'会',on:'カイ・エ',kun:'あ(う)',m:'meet'},
+  {k:'光',on:'コウ',kun:'ひかり',m:'light'},
+  {k:'兄',on:'ケイ・キョウ',kun:'あに',m:'elder brother'},
+  {k:'内',on:'ナイ',kun:'うち',m:'inside'},
+  {k:'公',on:'コウ',kun:'おおやけ',m:'public'},
+  {k:'冬',on:'トウ',kun:'ふゆ',m:'winter'},
+  {k:'前',on:'ゼン',kun:'まえ',m:'before/front'},
+  {k:'北',on:'ホク',kun:'きた',m:'north'},
+  {k:'午',on:'ゴ',kun:'',m:'noon'},
+  {k:'半',on:'ハン',kun:'なか(ば)',m:'half'},
+  {k:'南',on:'ナン',kun:'みなみ',m:'south'},
+  {k:'原',on:'ゲン',kun:'はら',m:'field/origin'},
+  {k:'友',on:'ユウ',kun:'とも',m:'friend'},
+  {k:'古',on:'コ',kun:'ふる(い)',m:'old'},
+  {k:'台',on:'ダイ・タイ',kun:'',m:'platform'},
+  {k:'同',on:'ドウ',kun:'おな(じ)',m:'same'},
+  {k:'後',on:'ゴ・コウ',kun:'あと・うし(ろ)',m:'behind/after'},
+  {k:'外',on:'ガイ・ゲ',kun:'そと・ほか',m:'outside'},
+  {k:'多',on:'タ',kun:'おお(い)',m:'many'},
+  {k:'夜',on:'ヤ',kun:'よる',m:'night'},
+  {k:'太',on:'タイ・タ',kun:'ふと(い)',m:'thick/fat'},
+  {k:'妹',on:'マイ',kun:'いもうと',m:'younger sister'},
+  {k:'姉',on:'シ',kun:'あね',m:'elder sister'},
+  {k:'室',on:'シツ',kun:'むろ',m:'room'},
+  {k:'家',on:'カ・ケ',kun:'いえ・や',m:'house/family'},
+  {k:'寺',on:'ジ',kun:'てら',m:'temple'},
+  {k:'少',on:'ショウ',kun:'すく(ない)・すこ(し)',m:'few/little'},
+  {k:'岩',on:'ガン',kun:'いわ',m:'rock'},
+  {k:'工',on:'コウ・ク',kun:'',m:'craft/work'},
+  {k:'市',on:'シ',kun:'いち',m:'city/market'},
+  {k:'帰',on:'キ',kun:'かえ(る)',m:'return'},
+  {k:'広',on:'コウ',kun:'ひろ(い)',m:'wide'},
+  {k:'店',on:'テン',kun:'みせ',m:'shop'},
+  {k:'弓',on:'キュウ',kun:'ゆみ',m:'bow'},
+  {k:'引',on:'イン',kun:'ひ(く)',m:'pull'},
+  {k:'弟',on:'テイ・ダイ',kun:'おとうと',m:'younger brother'},
+  {k:'弱',on:'ジャク',kun:'よわ(い)',m:'weak'},
+  {k:'強',on:'キョウ・ゴウ',kun:'つよ(い)',m:'strong'},
+  {k:'形',on:'ケイ・ギョウ',kun:'かたち',m:'shape'},
+  {k:'当',on:'トウ',kun:'あ(たる)',m:'hit/right'},
+  {k:'心',on:'シン',kun:'こころ',m:'heart/mind'},
+  {k:'思',on:'シ',kun:'おも(う)',m:'think'},
+  {k:'戸',on:'コ',kun:'と',m:'door'},
+  {k:'才',on:'サイ',kun:'',m:'talent/age'},
+  {k:'教',on:'キョウ',kun:'おし(える)',m:'teach'},
+  {k:'数',on:'スウ',kun:'かず・かぞ(える)',m:'number/count'},
+  {k:'新',on:'シン',kun:'あたら(しい)',m:'new'},
+  {k:'方',on:'ホウ',kun:'かた',m:'direction/person'},
+  {k:'旅',on:'リョ',kun:'たび',m:'travel'},
+  {k:'明',on:'メイ・ミョウ',kun:'あか(るい)',m:'bright'},
+  {k:'星',on:'セイ',kun:'ほし',m:'star'},
+  {k:'春',on:'シュン',kun:'はる',m:'spring'},
+  {k:'昼',on:'チュウ',kun:'ひる',m:'daytime'},
+  {k:'時',on:'ジ',kun:'とき',m:'time'},
+  {k:'晴',on:'セイ',kun:'は(れる)',m:'clear weather'},
+  {k:'曜',on:'ヨウ',kun:'',m:'day of the week'},
+  {k:'書',on:'ショ',kun:'か(く)',m:'write'},
+  {k:'朝',on:'チョウ',kun:'あさ',m:'morning'},
+  {k:'来',on:'ライ',kun:'く(る)',m:'come'},
+  {k:'東',on:'トウ',kun:'ひがし',m:'east'},
+  {k:'楽',on:'ガク・ラク',kun:'たの(しい)',m:'fun/music'},
+  {k:'歌',on:'カ',kun:'うた(う)',m:'song'},
+  {k:'止',on:'シ',kun:'と(まる)',m:'stop'},
+  {k:'歩',on:'ホ',kun:'ある(く)',m:'walk'},
+  {k:'母',on:'ボ',kun:'はは',m:'mother'},
+  {k:'毎',on:'マイ',kun:'',m:'every'},
+  {k:'毛',on:'モウ',kun:'け',m:'hair/fur'},
+  {k:'池',on:'チ',kun:'いけ',m:'pond'},
+  {k:'汽',on:'キ',kun:'',m:'steam'},
+  {k:'活',on:'カツ',kun:'',m:'active/lively'},
+  {k:'海',on:'カイ',kun:'うみ',m:'sea'},
+  {k:'点',on:'テン',kun:'',m:'point/dot'},
+  {k:'父',on:'フ',kun:'ちち',m:'father'},
+  {k:'牛',on:'ギュウ',kun:'うし',m:'cow'},
+  {k:'理',on:'リ',kun:'',m:'reason/logic'},
+  {k:'用',on:'ヨウ',kun:'もち(いる)',m:'use'},
+  {k:'画',on:'ガ・カク',kun:'',m:'picture/stroke'},
+  {k:'番',on:'バン',kun:'',m:'number/turn'},
+  {k:'直',on:'チョク・ジキ',kun:'なお(す)',m:'straight/fix'},
+  {k:'矢',on:'シ',kun:'や',m:'arrow'},
+  {k:'知',on:'チ',kun:'し(る)',m:'know'},
+  {k:'社',on:'シャ',kun:'やしろ',m:'company/shrine'},
+  {k:'秋',on:'シュウ',kun:'あき',m:'autumn'},
+  {k:'科',on:'カ',kun:'',m:'subject/course'},
+  {k:'答',on:'トウ',kun:'こた(える)',m:'answer'},
+  {k:'算',on:'サン',kun:'',m:'calculate'},
+  {k:'米',on:'ベイ・マイ',kun:'こめ',m:'rice'},
+  {k:'紙',on:'シ',kun:'かみ',m:'paper'},
+  {k:'細',on:'サイ',kun:'ほそ(い)・こま(かい)',m:'thin/detailed'},
+  {k:'組',on:'ソ',kun:'く(む)・くみ',m:'group/assemble'},
+  {k:'絵',on:'カイ・エ',kun:'',m:'picture/drawing'},
+  {k:'線',on:'セン',kun:'',m:'line'},
+  {k:'羽',on:'ウ',kun:'は・はね',m:'feather/wing'},
+  {k:'考',on:'コウ',kun:'かんが(える)',m:'think/consider'},
+  {k:'聞',on:'ブン・モン',kun:'き(く)',m:'hear/ask'},
+  {k:'肉',on:'ニク',kun:'',m:'meat'},
+  {k:'自',on:'ジ・シ',kun:'みずか(ら)',m:'self'},
+  {k:'船',on:'セン',kun:'ふね',m:'ship'},
+  {k:'色',on:'ショク・シキ',kun:'いろ',m:'color'},
+  {k:'茶',on:'チャ・サ',kun:'',m:'tea'},
+  {k:'行',on:'コウ・ギョウ',kun:'い(く)・おこな(う)',m:'go/do'},
+  {k:'西',on:'セイ・サイ',kun:'にし',m:'west'},
+  {k:'親',on:'シン',kun:'おや・した(しい)',m:'parent/intimate'},
+  {k:'角',on:'カク',kun:'かど・つの',m:'angle/horn'},
+  {k:'言',on:'ゲン・ゴン',kun:'い(う)・こと',m:'say/word'},
+  {k:'計',on:'ケイ',kun:'はか(る)',m:'measure/plan'},
+  {k:'記',on:'キ',kun:'しる(す)',m:'record'},
+  {k:'話',on:'ワ',kun:'はな(す)・はなし',m:'talk/story'},
+  {k:'語',on:'ゴ',kun:'かた(る)',m:'language'},
+  {k:'読',on:'ドク・トク',kun:'よ(む)',m:'read'},
+  {k:'谷',on:'コク',kun:'たに',m:'valley'},
+  {k:'買',on:'バイ',kun:'か(う)',m:'buy'},
+  {k:'走',on:'ソウ',kun:'はし(る)',m:'run'},
+  {k:'近',on:'キン',kun:'ちか(い)',m:'near'},
+  {k:'通',on:'ツウ',kun:'とお(る)・かよ(う)',m:'pass through'},
+  {k:'週',on:'シュウ',kun:'',m:'week'},
+  {k:'道',on:'ドウ',kun:'みち',m:'road/way'},
+  {k:'遠',on:'エン・オン',kun:'とお(い)',m:'far'},
+  {k:'里',on:'リ',kun:'さと',m:'village/ri'},
+  {k:'野',on:'ヤ',kun:'の',m:'field/plain'},
+  {k:'長',on:'チョウ',kun:'なが(い)',m:'long/chief'},
+  {k:'門',on:'モン',kun:'かど',m:'gate'},
+  {k:'間',on:'カン・ケン',kun:'あいだ・ま',m:'interval/between'},
+  {k:'雪',on:'セツ',kun:'ゆき',m:'snow'},
+  {k:'雲',on:'ウン',kun:'くも',m:'cloud'},
+  {k:'電',on:'デン',kun:'',m:'electricity'},
+  {k:'食',on:'ショク',kun:'た(べる)',m:'eat/food'},
+  {k:'首',on:'シュ',kun:'くび',m:'neck/head'},
+  {k:'馬',on:'バ',kun:'うま',m:'horse'},
+  {k:'高',on:'コウ',kun:'たか(い)',m:'high/tall'},
+  {k:'魚',on:'ギョ',kun:'うお・さかな',m:'fish'},
+  {k:'鳥',on:'チョウ',kun:'とり',m:'bird'},
+  {k:'鳴',on:'メイ',kun:'な(く)・な(る)',m:'cry/ring'},
+  {k:'麦',on:'バク',kun:'むぎ',m:'wheat'},
+  {k:'黄',on:'コウ・オウ',kun:'き',m:'yellow'},
+  {k:'黒',on:'コク',kun:'くろ(い)',m:'black'},
+  {k:'園',on:'エン',kun:'その',m:'garden'},
+  {k:'地',on:'チ・ジ',kun:'',m:'ground'},
+  {k:'場',on:'ジョウ',kun:'ば',m:'place'},
+  {k:'国',on:'コク',kun:'くに',m:'country'},
+  {k:'図',on:'ズ・ト',kun:'はか(る)',m:'diagram/map'},
+  {k:'回',on:'カイ',kun:'まわ(る)',m:'turn/times'},
+  {k:'声',on:'セイ',kun:'こえ',m:'voice'},
+  {k:'売',on:'バイ',kun:'う(る)',m:'sell'},
+  {k:'夏',on:'カ',kun:'なつ',m:'summer'},
+  {k:'頭',on:'トウ・ズ',kun:'あたま',m:'head'},
+  {k:'顔',on:'ガン',kun:'かお',m:'face'},
+  {k:'風',on:'フウ・フ',kun:'かぜ',m:'wind'},
+  {k:'体',on:'タイ・テイ',kun:'からだ',m:'body'},
+  {k:'何',on:'カ',kun:'なに・なん',m:'what'},
+  {k:'作',on:'サク・サ',kun:'つく(る)',m:'make'},
+  {k:'元',on:'ゲン・ガン',kun:'もと',m:'origin'},
+  {k:'切',on:'セツ・サイ',kun:'き(る)',m:'cut'},
+  {k:'分',on:'ブン・フン',kun:'わ(ける)',m:'divide/minute'},
+  {k:'合',on:'ゴウ・ガッ',kun:'あ(う)',m:'fit/match'},
+  {k:'今',on:'コン・キン',kun:'いま',m:'now'},
+  {k:'京',on:'キョウ・ケイ',kun:'',m:'capital'},
+  {k:'夜',on:'ヤ',kun:'よる',m:'night'}
+];
+
+// Deduplicate grade 2 (夜 appears twice in some lists)
+const grade2Set = new Set();
+const GRADE2_CLEAN = GRADE2.filter(item => {
+  if (grade2Set.has(item.k)) return false;
+  grade2Set.add(item.k);
+  return true;
+});
+
+// ===== SENTENCE TEST DATA =====
+// 文章テスト: 各漢字に対して、読みがなをヒントにして漢字を書かせる問題
+// q = 問題文（ひらがな読みを【】で囲む）, r = 正解の漢字
+const KANJI_SENTENCES = {
+  // ===== 1年生 =====
+  '一': {q:'きょうは【いち】がつです。', r:'一'},
+  '二': {q:'つくえに本が【に】さつある。', r:'二'},
+  '三': {q:'【さん】にんでわけよう。', r:'三'},
+  '四': {q:'【よ】つのりんごをもらった。', r:'四'},
+  '五': {q:'【いつ】つのほしをかぞえた。', r:'五'},
+  '六': {q:'【ろく】じにおきます。', r:'六'},
+  '七': {q:'いろは【なな】いろある。', r:'七'},
+  '八': {q:'おかしを【やっ】つにわけた。', r:'八'},
+  '九': {q:'テストで【きゅう】じゅうてん！', r:'九'},
+  '十': {q:'【じゅう】かいまでのぼった。', r:'十'},
+  '百': {q:'おこづかいは【ひゃく】えんです。', r:'百'},
+  '千': {q:'【せん】えんさつでおかいもの。', r:'千'},
+  '上': {q:'やまの【うえ】にのぼった。', r:'上'},
+  '下': {q:'かいだんを【した】にいく。', r:'下'},
+  '左': {q:'【ひだり】がわをあるこう。', r:'左'},
+  '右': {q:'【みぎ】てをあげてください。', r:'右'},
+  '中': {q:'はこの【なか】になにがある？', r:'中'},
+  '大': {q:'【おお】きいいぬがいるね。', r:'大'},
+  '小': {q:'【ちい】さいねこがないている。', r:'小'},
+  '月': {q:'きれいな【つき】がでている。', r:'月'},
+  '日': {q:'きょうはいい【ひ】だね。', r:'日'},
+  '年': {q:'あたらしい【とし】がくる。', r:'年'},
+  '早': {q:'あさ【はや】くおきた。', r:'早'},
+  '木': {q:'おおきな【き】のしたであそぶ。', r:'木'},
+  '林': {q:'【はやし】のなかをさんぽした。', r:'林'},
+  '森': {q:'【もり】にはとりがたくさんいる。', r:'森'},
+  '山': {q:'たかい【やま】にのぼった。', r:'山'},
+  '川': {q:'【かわ】でさかなをつった。', r:'川'},
+  '土': {q:'【つち】のうえにはなをうえる。', r:'土'},
+  '空': {q:'【そら】がまっさおだ。', r:'空'},
+  '田': {q:'おじいちゃんの【た】んぼ。', r:'田'},
+  '天': {q:'【てん】きがいいからおさんぽ。', r:'天'},
+  '生': {q:'あたらしいいのちが【う】まれた。', r:'生'},
+  '花': {q:'きれいな【はな】がさいた。', r:'花'},
+  '草': {q:'にわの【くさ】をぬいた。', r:'草'},
+  '虫': {q:'【むし】とりにいこう。', r:'虫'},
+  '犬': {q:'【いぬ】をさんぽさせた。', r:'犬'},
+  '人': {q:'やさしい【ひと】がたすけてくれた。', r:'人'},
+  '名': {q:'じぶんの【な】まえをかいた。', r:'名'},
+  '女': {q:'【おんな】のこがわらった。', r:'女'},
+  '男': {q:'【おとこ】のこがはしっている。', r:'男'},
+  '子': {q:'【こ】どものこえがきこえる。', r:'子'},
+  '目': {q:'【め】をとじてかんがえた。', r:'目'},
+  '耳': {q:'【みみ】をすませてきいた。', r:'耳'},
+  '口': {q:'【くち】をおおきくあけた。', r:'口'},
+  '手': {q:'【て】をあらってからたべよう。', r:'手'},
+  '足': {q:'【あし】がはやいねえ。', r:'足'},
+  '見': {q:'えほんを【み】ました。', r:'見'},
+  '音': {q:'ピアノの【おと】がきこえる。', r:'音'},
+  '力': {q:'【ちから】をあわせてがんばろう。', r:'力'},
+  '気': {q:'げん【き】にあそぼう。', r:'気'},
+  '円': {q:'ジュースは百【えん】です。', r:'円'},
+  '入': {q:'おうちに【はい】ろう。', r:'入'},
+  '出': {q:'あさ、いえを【で】た。', r:'出'},
+  '立': {q:'いすから【た】ちあがった。', r:'立'},
+  '休': {q:'つかれたから【やす】もう。', r:'休'},
+  '先': {q:'【せん】せいにあいさつした。', r:'先'},
+  '夕': {q:'【ゆう】がたにかえろう。', r:'夕'},
+  '本': {q:'【ほん】をよむのがすき。', r:'本'},
+  '文': {q:'【ぶん】しょうをかいた。', r:'文'},
+  '字': {q:'きれいな【じ】をかこう。', r:'字'},
+  '学': {q:'【がっ】こうにいくよ。', r:'学'},
+  '校': {q:'がっ【こう】はたのしい。', r:'校'},
+  '村': {q:'ちいさな【むら】にすんでいる。', r:'村'},
+  '町': {q:'【まち】のおまつりがある。', r:'町'},
+  '正': {q:'【ただ】しいこたえはどれ？', r:'正'},
+  '水': {q:'【みず】をのんだ。', r:'水'},
+  '火': {q:'【ひ】をつけてりょうりする。', r:'火'},
+  '玉': {q:'きれいな【たま】をひろった。', r:'玉'},
+  '王': {q:'ライオンはどうぶつの【おう】さま。', r:'王'},
+  '石': {q:'きれいな【いし】をみつけた。', r:'石'},
+  '竹': {q:'【たけ】やぶのなかをあるく。', r:'竹'},
+  '糸': {q:'【いと】でぬいものをする。', r:'糸'},
+  '貝': {q:'うみで【かい】がらをひろった。', r:'貝'},
+  '車': {q:'あかい【くるま】がとおった。', r:'車'},
+  '金': {q:'【きん】いろのほしがひかる。', r:'金'},
+  '雨': {q:'きょうは【あめ】がふっている。', r:'雨'},
+  '赤': {q:'【あか】いりんごをたべた。', r:'赤'},
+  '青': {q:'【あお】いうみがきれい。', r:'青'},
+  '白': {q:'【しろ】いうさぎがいるよ。', r:'白'},
+  // ===== 2年生 =====
+  '刀': {q:'にほん【とう】はかっこいい。', r:'刀'},
+  '万': {q:'【まん】いちのときはにげよう。', r:'万'},
+  '丸': {q:'【まる】いボールであそぶ。', r:'丸'},
+  '交': {q:'【こう】さてんをわたった。', r:'交'},
+  '会': {q:'ともだちに【あ】いにいく。', r:'会'},
+  '光': {q:'【ひかり】がまぶしいね。', r:'光'},
+  '兄': {q:'おとうとは【あに】がだいすき。', r:'兄'},
+  '内': {q:'いえの【うち】がわをそうじした。', r:'内'},
+  '公': {q:'【こう】えんであそぼう。', r:'公'},
+  '冬': {q:'【ふゆ】はゆきがふる。', r:'冬'},
+  '前': {q:'えきの【まえ】でまっている。', r:'前'},
+  '北': {q:'【きた】かぜがつめたい。', r:'北'},
+  '午': {q:'【ご】ごからあめがふる。', r:'午'},
+  '半': {q:'ケーキを【はん】ぶんにした。', r:'半'},
+  '南': {q:'【みなみ】のしまにいきたい。', r:'南'},
+  '原': {q:'くさ【はら】をかけまわった。', r:'原'},
+  '友': {q:'【とも】だちとあそんだ。', r:'友'},
+  '古': {q:'【ふる】いおてらをみた。', r:'古'},
+  '台': {q:'【だい】どころでおてつだい。', r:'台'},
+  '同': {q:'【おな】じクラスのこだよ。', r:'同'},
+  '後': {q:'【あと】でおやつをたべよう。', r:'後'},
+  '外': {q:'【そと】であそぼうよ。', r:'外'},
+  '多': {q:'【おお】いほうのあめをもらった。', r:'多'},
+  '夜': {q:'【よる】になるとほしがみえる。', r:'夜'},
+  '太': {q:'【ふと】いえだをひろった。', r:'太'},
+  '妹': {q:'【いもうと】とおままごとをした。', r:'妹'},
+  '姉': {q:'【あね】はやさしい。', r:'姉'},
+  '室': {q:'きょう【しつ】でべんきょうする。', r:'室'},
+  '家': {q:'【いえ】にかえってしゅくだいした。', r:'家'},
+  '寺': {q:'おおきな【てら】にいった。', r:'寺'},
+  '少': {q:'【すこ】しだけたべた。', r:'少'},
+  '岩': {q:'おおきな【いわ】にのぼった。', r:'岩'},
+  '工': {q:'【こう】さくがだいすき。', r:'工'},
+  '市': {q:'【し】やくしょはどこですか。', r:'市'},
+  '帰': {q:'いえに【かえ】ろう。', r:'帰'},
+  '広': {q:'【ひろ】いこうえんであそぶ。', r:'広'},
+  '店': {q:'パンやさんの【みせ】にいく。', r:'店'},
+  '弓': {q:'【ゆみ】やをうつれんしゅう。', r:'弓'},
+  '引': {q:'つなを【ひ】っぱった。', r:'引'},
+  '弟': {q:'【おとうと】といっしょにあそぶ。', r:'弟'},
+  '弱': {q:'このチームは【よわ】い。', r:'弱'},
+  '強': {q:'【つよ】いかぜがふいている。', r:'強'},
+  '形': {q:'ほしの【かたち】のクッキー。', r:'形'},
+  '当': {q:'くじが【あ】たった！', r:'当'},
+  '心': {q:'やさしい【こころ】をもとう。', r:'心'},
+  '思': {q:'たのしかったと【おも】う。', r:'思'},
+  '戸': {q:'【と】をしめてください。', r:'戸'},
+  '才': {q:'ぼくは七【さい】です。', r:'才'},
+  '教': {q:'せんせいが【おし】えてくれた。', r:'教'},
+  '数': {q:'【かず】をかぞえよう。', r:'数'},
+  '新': {q:'【あたら】しいくつをかった。', r:'新'},
+  '方': {q:'あの【かた】はだれですか。', r:'方'},
+  '旅': {q:'かぞくで【たび】にでた。', r:'旅'},
+  '明': {q:'へやが【あか】るくなった。', r:'明'},
+  '星': {q:'よぞらに【ほし】がひかる。', r:'星'},
+  '春': {q:'【はる】になるとさくらがさく。', r:'春'},
+  '昼': {q:'【ひる】ごはんをたべよう。', r:'昼'},
+  '時': {q:'いま何【じ】ですか。', r:'時'},
+  '晴': {q:'あしたは【は】れるかな。', r:'晴'},
+  '曜': {q:'きょうは何【よう】びですか。', r:'曜'},
+  '書': {q:'にっきを【か】いた。', r:'書'},
+  '朝': {q:'【あさ】ごはんをたべた。', r:'朝'},
+  '来': {q:'ともだちがあそびに【き】た。', r:'来'},
+  '東': {q:'【ひがし】のそらがあかるい。', r:'東'},
+  '楽': {q:'えんそくは【たの】しかった。', r:'楽'},
+  '歌': {q:'みんなで【うた】をうたった。', r:'歌'},
+  '止': {q:'しんごうで【と】まった。', r:'止'},
+  '歩': {q:'がっこうまで【ある】いていく。', r:'歩'},
+  '母': {q:'【はは】のつくるカレーがすき。', r:'母'},
+  '毎': {q:'【まい】にちれんしゅうする。', r:'毎'},
+  '毛': {q:'ねこの【け】がふわふわ。', r:'毛'},
+  '池': {q:'【いけ】にかめがいる。', r:'池'},
+  '汽': {q:'【き】しゃがはしっていく。', r:'汽'},
+  '活': {q:'げんきに生【かつ】しよう。', r:'活'},
+  '海': {q:'なつは【うみ】にいきたい。', r:'海'},
+  '点': {q:'テストで百【てん】をとった。', r:'点'},
+  '父': {q:'【ちち】とキャッチボールした。', r:'父'},
+  '牛': {q:'【うし】がモーとないた。', r:'牛'},
+  '理': {q:'【り】かのじっけんがすき。', r:'理'},
+  '用': {q:'ノートを【よう】いした。', r:'用'},
+  '画': {q:'え【が】きれいだね。', r:'画'},
+  '番': {q:'つぎはきみの【ばん】だよ。', r:'番'},
+  '直': {q:'まちがいを【なお】した。', r:'直'},
+  '矢': {q:'ゆみで【や】をいった。', r:'矢'},
+  '知': {q:'あたらしいことを【し】った。', r:'知'},
+  '社': {q:'じん【じゃ】におまいりした。', r:'社'},
+  '秋': {q:'【あき】はもみじがきれい。', r:'秋'},
+  '科': {q:'理【か】のじゅぎょうがすき。', r:'科'},
+  '答': {q:'もんだいに【こた】えた。', r:'答'},
+  '算': {q:'【さん】すうのテストがあった。', r:'算'},
+  '米': {q:'お【こめ】をあらった。', r:'米'},
+  '紙': {q:'おりがみの【かみ】でつるをおった。', r:'紙'},
+  '細': {q:'【ほそ】いえんぴつでかいた。', r:'細'},
+  '組': {q:'ぼくは二【くみ】です。', r:'組'},
+  '絵': {q:'じょうずな【え】をかいた。', r:'絵'},
+  '線': {q:'まっすぐな【せん】をひいた。', r:'線'},
+  '羽': {q:'とりの【はね】がおちていた。', r:'羽'},
+  '考': {q:'よく【かんが】えてからこたえよう。', r:'考'},
+  '聞': {q:'おはなしをよく【き】こう。', r:'聞'},
+  '肉': {q:'やき【にく】をたべた。', r:'肉'},
+  '自': {q:'【じ】ぶんでやってみよう。', r:'自'},
+  '船': {q:'おおきな【ふね】がうみにいる。', r:'船'},
+  '色': {q:'いろいろな【いろ】のはながさいた。', r:'色'},
+  '茶': {q:'あたたかい【ちゃ】をのんだ。', r:'茶'},
+  '行': {q:'がっこうに【い】ってきます。', r:'行'},
+  '西': {q:'【にし】のそらがゆうやけだ。', r:'西'},
+  '親': {q:'【おや】こでおでかけした。', r:'親'},
+  '角': {q:'みちの【かど】をまがった。', r:'角'},
+  '言': {q:'ともだちに「ありがとう」と【い】った。', r:'言'},
+  '計': {q:'とけいで【けい】かくをたてた。', r:'計'},
+  '記': {q:'にっ【き】をかくのがしゅうかん。', r:'記'},
+  '話': {q:'ともだちと電【わ】ではなした。', r:'話'},
+  '語': {q:'こく【ご】のじゅぎょうがある。', r:'語'},
+  '読': {q:'ほんを【よ】むのがだいすき。', r:'読'},
+  '谷': {q:'ふかい【たに】をのぞいた。', r:'谷'},
+  '買': {q:'おかしを【か】いにいった。', r:'買'},
+  '走': {q:'うんどうかいで【はし】った。', r:'走'},
+  '近': {q:'がっこうは【ちか】いよ。', r:'近'},
+  '通': {q:'まいにちこのみちを【とお】る。', r:'通'},
+  '週': {q:'らい【しゅう】はテストがある。', r:'週'},
+  '道': {q:'ただしい【みち】をえらぼう。', r:'道'},
+  '遠': {q:'おじいちゃんのいえは【とお】い。', r:'遠'},
+  '里': {q:'ふる【さと】にかえった。', r:'里'},
+  '野': {q:'【の】はらであそんだ。', r:'野'},
+  '長': {q:'【なが】いでんしゃにのった。', r:'長'},
+  '門': {q:'がっこうの【もん】をくぐった。', r:'門'},
+  '間': {q:'ドアの【あいだ】からかぜがくる。', r:'間'},
+  '雪': {q:'【ゆき】がふってきた。', r:'雪'},
+  '雲': {q:'おおきな【くも】がうかんでいる。', r:'雲'},
+  '電': {q:'【でん】しゃにのっていこう。', r:'電'},
+  '食': {q:'おひるごはんを【た】べよう。', r:'食'},
+  '首': {q:'マフラーを【くび】にまいた。', r:'首'},
+  '馬': {q:'【うま】にのってみたい。', r:'馬'},
+  '高': {q:'【たか】いところからけしきをみた。', r:'高'},
+  '魚': {q:'【さかな】をつりにいった。', r:'魚'},
+  '鳥': {q:'【とり】がそらをとんでいる。', r:'鳥'},
+  '鳴': {q:'すずめがチュンチュン【な】いている。', r:'鳴'},
+  '麦': {q:'【むぎ】ちゃをのんだ。', r:'麦'},
+  '黄': {q:'【き】いろいひまわりがさいた。', r:'黄'},
+  '黒': {q:'【くろ】いねこがとおった。', r:'黒'},
+  '園': {q:'どうぶつ【えん】にいった。', r:'園'},
+  '地': {q:'【ち】ずをみてしらべた。', r:'地'},
+  '場': {q:'あそび【ば】しょをきめよう。', r:'場'},
+  '国': {q:'いろいろな【くに】のことをならった。', r:'国'},
+  '図': {q:'【ず】こうのじかんにえをかいた。', r:'図'},
+  '回': {q:'こうえんを三【かい】まわった。', r:'回'},
+  '声': {q:'おおきな【こえ】であいさつした。', r:'声'},
+  '売': {q:'おみせでアイスを【う】っている。', r:'売'},
+  '夏': {q:'【なつ】はプールがたのしい。', r:'夏'},
+  '頭': {q:'【あたま】がいいねっていわれた。', r:'頭'},
+  '顔': {q:'えがおの【かお】がすてき。', r:'顔'},
+  '風': {q:'つよい【かぜ】がふいている。', r:'風'},
+  '体': {q:'【からだ】をうごかしてあそぼう。', r:'体'},
+  '何': {q:'【なに】がすきですか。', r:'何'},
+  '作': {q:'ねんどで【つく】った。', r:'作'},
+  '元': {q:'【げん】きにあそんだ。', r:'元'},
+  '切': {q:'かみを【き】ってこうさくした。', r:'切'},
+  '分': {q:'ケーキを四つに【わ】けた。', r:'分'},
+  '合': {q:'こたえが【あ】っていた。', r:'合'},
+  '今': {q:'【いま】から出かけるよ。', r:'今'},
+  '京': {q:'とう【きょう】にいってみたい。', r:'京'},
+};
+
+// ===== APP STATE =====
+let state = {
+  currentGrade: 1,
+  currentKanjiList: [],
+  currentIndex: 0,
+  retryMode: false,
+  retryList: [],
+  sessionResults: [],
+  mastered: JSON.parse(localStorage.getItem('kd_mastered') || '{}'),
+  incorrect: JSON.parse(localStorage.getItem('kd_incorrect') || '{}'),
+  stamps: JSON.parse(localStorage.getItem('kd_stamps') || '{}'),
+  bestStreak: parseInt(localStorage.getItem('kd_bestStreak') || '0'),
+};
+
+function save() {
+  localStorage.setItem('kd_mastered', JSON.stringify(state.mastered));
+  localStorage.setItem('kd_incorrect', JSON.stringify(state.incorrect));
+  localStorage.setItem('kd_stamps', JSON.stringify(state.stamps));
+  localStorage.setItem('kd_bestStreak', state.bestStreak.toString());
+}
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  if (id === 'gradeScreen') updateGradeScreen();
+  if (id === 'kanjiListScreen') updateKanjiList();
+  if (id === 'stampScreen') updateStampScreen();
+}
+
+// ===== GRADE SCREEN =====
+function updateGradeScreen() {
+  const g1m = Object.keys(state.mastered).filter(k => GRADE1.some(g => g.k === k)).length;
+  const g2m = Object.keys(state.mastered).filter(k => GRADE2_CLEAN.some(g => g.k === k)).length;
+  const g1pct = Math.round((g1m/80)*100);
+  const g2pct = Math.round((g2m/GRADE2_CLEAN.length)*100);
+  document.getElementById('grade1pct').textContent = `${g1pct}%`;
+  document.getElementById('grade2pct').textContent = `${g2pct}%`;
+  document.getElementById('grade1count').textContent = `${g1m} / 80 字`;
+  document.getElementById('grade2count').textContent = `${g2m} / ${GRADE2_CLEAN.length} 字`;
+  document.getElementById('grade1progress').style.width = `${g1pct}%`;
+  document.getElementById('grade2progress').style.width = `${g2pct}%`;
+}
+
+// ===== KANJI LIST =====
+function selectGrade(g) {
+  state.currentGrade = g;
+  state.retryMode = false;
+  showScreen('kanjiListScreen');
+}
+
+function updateKanjiList() {
+  const list = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const masteredCount = Object.keys(state.mastered).filter(k => list.some(g => g.k === k)).length;
+  const pct = Math.round((masteredCount / list.length) * 100);
+  document.getElementById('listTitle').textContent = `${state.currentGrade}ねんせい（${masteredCount}/${list.length}字 ${pct}%）`;
+
+  const grid = document.getElementById('kanjiGrid');
+  grid.innerHTML = '';
+
+  const incorrectKeys = Object.keys(state.incorrect).filter(k => list.some(g => g.k === k));
+  const retryBtn = document.getElementById('retryBtn');
+  retryBtn.style.display = incorrectKeys.length > 0 ? 'block' : 'none';
+
+  const banner = document.getElementById('retryBanner');
+  banner.style.display = state.retryMode ? 'flex' : 'none';
+
+  const displayList = state.retryMode
+    ? list.filter(item => state.incorrect[item.k])
+    : list;
+
+  displayList.forEach((item, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'kanji-cell';
+    if (state.mastered[item.k]) cell.classList.add('mastered');
+    if (state.incorrect[item.k] && !state.retryMode) cell.classList.add('incorrect');
+    cell.textContent = item.k;
+    cell.onclick = () => startPracticeFrom(displayList, i);
+    grid.appendChild(cell);
+  });
+}
+
+// ===== PRACTICE =====
+function startPracticeFrom(list, index) {
+  state.currentKanjiList = list;
+  state.currentIndex = index;
+  state.sessionResults = [];
+  loadKanji();
+  showScreen('practiceScreen');
+}
+
+function startRetry() {
+  state.retryMode = true;
+  const list = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const retryList = list.filter(item => state.incorrect[item.k]);
+  if (retryList.length === 0) {
+    showToast('やりなおす漢字がありません');
+    return;
+  }
+  startPracticeFrom(retryList, 0);
+}
+
+function exitRetry() {
+  state.retryMode = false;
+  updateKanjiList();
+}
+
+function loadKanji() {
+  if (state.currentIndex >= state.currentKanjiList.length) {
+    showResults();
+    return;
+  }
+  const item = state.currentKanjiList[state.currentIndex];
+  document.getElementById('modelKanji').textContent = item.k;
+  document.getElementById('kanjiReading').textContent = `おん: ${item.on || 'ー'} ／ くん: ${item.kun || 'ー'}`;
+  document.getElementById('kanjiMeaning').textContent = `いみ: ${item.m}`;
+  document.getElementById('practiceProgress').textContent =
+    `${state.currentIndex + 1} / ${state.currentKanjiList.length}`;
+
+  const messages = [
+    'けんしんくん、お手本をよく見て書いてみよう！',
+    'けんしんくん、ゆっくりでいいよ！がんばれ〜！',
+    'さすが けんしんくん！かっこいい字をかこう！',
+    'けんしんくんなら きれいに書けるよ！',
+    'しっかり見てまねしてみよう！',
+    'いつも読書してるから 漢字もとくいだね！',
+    'ピピッ！けんしんくん いっしょにがんばろう！',
+    'けんしんくん、この字はおもしろいよ！',
+    'ていねいに書けるけんしんくんは かっこいい！',
+  ];
+  document.getElementById('birdMessage').textContent =
+    messages[Math.floor(Math.random() * messages.length)];
+  placeBird('speechBird', 36, 'normal');
+  placeKenshin('speechKenshin', 30, 'normal');
+
+  clearCanvas();
+}
+
+function submitKanji() {
+  const item = state.currentKanjiList[state.currentIndex];
+  // Check if user drew something
+  if (strokeCount < 1) {
+    document.getElementById('birdMessage').textContent = 'けんしんくん、まだなにも書いてないよ！書いてみて！';
+    placeBird('speechBird', 36, 'thinking');
+    placeKenshin('speechKenshin', 30, 'thinking');
+    return;
+  }
+
+  // Simplified grading: compare canvas coverage with model
+  const result = gradeKanji();
+  state.sessionResults.push({ kanji: item.k, correct: result });
+
+  if (result) {
+    state.mastered[item.k] = true;
+    delete state.incorrect[item.k];
+    showStarEffect();
+    const praiseMessages = [
+      'さすが けんしんくん！かっこいい！',
+      'けんしんくん すごい！じょうずに書けたね！',
+      'いつも読書してるのが いきてるね！',
+      'もう りっぱな かっこいいおにいさんだね！',
+      'けんしんくん 天才！ばっちり！',
+      'さすがだね！どんどん漢字はかせになってるよ！',
+      'けんしんくん、かっこよすぎ！',
+      'この調子！けんしんくんならぜんぶできるよ！',
+      'ピピーッ！けんしんくん最高！',
+      'うわぁ！きれいな字！さすがけんしんくん！',
+    ];
+    document.getElementById('birdMessage').textContent =
+      praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
+    placeBird('speechBird', 36, 'cheer');
+    placeKenshin('speechKenshin', 30, 'cheer');
+  } else {
+    state.incorrect[item.k] = true;
+    const encourageMessages = [
+      'おしい！けんしんくんなら次はできるよ！',
+      'だいじょうぶ！もういちど書いてみよう！',
+      'けんしんくん、あきらめないところがかっこいい！',
+      'ちょっとむずかしかったね。でもけんしんくんならだいじょうぶ！',
+    ];
+    document.getElementById('birdMessage').textContent =
+      encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
+    placeBird('speechBird', 36, 'thinking');
+    placeKenshin('speechKenshin', 30, 'thinking');
+  }
+  save();
+  recordStamp();
+
+  setTimeout(() => {
+    state.currentIndex++;
+    loadKanji();
+  }, result ? 1200 : 800);
+}
+
+function skipKanji() {
+  state.currentIndex++;
+  loadKanji();
+}
+
+function exitPractice() {
+  if (state.sessionResults.length > 0) {
+    showResults();
+  } else {
+    showScreen('kanjiListScreen');
+  }
+}
+
+// ===== GRADING =====
+let strokeCount = 0;
+
+function gradeKanji() {
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  let filledPixels = 0;
+  for (let i = 3; i < pixels.length; i += 4) {
+    if (pixels[i] > 128) filledPixels++;
+  }
+  const coverage = filledPixels / (canvas.width * canvas.height);
+  // Accept if there's reasonable coverage (user actually wrote something)
+  return coverage > 0.008 && strokeCount >= 1;
+}
+
+// ===== RESULTS =====
+function showResults() {
+  const correct = state.sessionResults.filter(r => r.correct).length;
+  const total = state.sessionResults.length;
+
+  if (total === 0) {
+    showScreen('kanjiListScreen');
+    return;
+  }
+
+  const pct = Math.round((correct / total) * 100);
+  document.getElementById('resultScore').textContent = `${pct}%`;
+  document.getElementById('resultDetail').textContent = `${total}もん中 ${correct}もん せいかい！`;
+
+  let title = 'おつかれさま！';
+  let resultMood = 'normal';
+  if (pct === 100) { title = 'けんしんくん かんぺき！さすが！'; resultMood = 'cheer'; }
+  else if (pct >= 80) { title = 'けんしんくん すごくかっこいい！'; resultMood = 'happy'; }
+  else if (pct >= 50) { title = 'けんしんくん がんばったね！'; resultMood = 'normal'; }
+  else { title = 'けんしんくん つぎもがんばろう！'; resultMood = 'thinking'; }
+  document.getElementById('resultTitle').textContent = title;
+  placeBird('resultBird', 70, resultMood);
+  placeKenshin('resultKenshin', 70, resultMood);
+
+  const hasIncorrect = state.sessionResults.some(r => !r.correct);
+  document.getElementById('retryIncorrectBtn').style.display = hasIncorrect ? 'block' : 'none';
+  // Reset retry button to tracing mode
+  document.getElementById('retryIncorrectBtn').onclick = retryIncorrect;
+
+  showScreen('resultScreen');
+}
+
+function retryIncorrect() {
+  const incorrectKanji = state.sessionResults.filter(r => !r.correct).map(r => r.kanji);
+  const allList = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const retryList = allList.filter(item => incorrectKanji.includes(item.k));
+  if (retryList.length > 0) {
+    state.retryMode = true;
+    startPracticeFrom(retryList, 0);
+  }
+}
+
+// ===== STAR EFFECT =====
+function showStarEffect() {
+  const container = document.getElementById('starContainer');
+  const stars = ['⭐', '🌟', '✨', '💫', '⭐'];
+  for (let i = 0; i < 20; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.textContent = stars[Math.floor(Math.random() * stars.length)];
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${20 + Math.random() * 60}%`;
+    star.style.fontSize = `${16 + Math.random() * 24}px`;
+    star.style.animationDelay = `${Math.random() * 0.5}s`;
+    container.appendChild(star);
+    setTimeout(() => star.remove(), 1500);
+  }
+}
+
+// ===== CANVAS (Apple Pencil Support) =====
+function initCanvas() {
+  const canvas = document.getElementById('drawCanvas');
+  const wrapper = canvas.parentElement;
+
+  function resizeCanvas() {
+    const rect = wrapper.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#141413';
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+        pressure: e.touches[0].force || 0.5
+      };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: 0.5 };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    const pos = getPos(e);
+    lastX = pos.x;
+    lastY = pos.y;
+    strokeCount++;
+  }
+
+  function draw(e) {
+    e.preventDefault();
+    if (!drawing) return;
+    const pos = getPos(e);
+    const ctx = canvas.getContext('2d');
+    // Pressure-sensitive line width (Apple Pencil)
+    const pressure = pos.pressure || 0.5;
+    ctx.lineWidth = 2 + pressure * 6;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastX = pos.x;
+    lastY = pos.y;
+  }
+
+  function endDraw(e) {
+    if (e) e.preventDefault();
+    drawing = false;
+  }
+
+  // Pointer events for Apple Pencil
+  canvas.addEventListener('pointerdown', startDraw, { passive: false });
+  canvas.addEventListener('pointermove', draw, { passive: false });
+  canvas.addEventListener('pointerup', endDraw, { passive: false });
+  canvas.addEventListener('pointercancel', endDraw, { passive: false });
+  canvas.addEventListener('pointerleave', endDraw, { passive: false });
+
+  // Prevent scrolling on canvas
+  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+}
+
+function clearCanvas() {
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  strokeCount = 0;
+}
+
+// ===== STAMPS =====
+function recordStamp() {
+  const today = new Date().toISOString().split('T')[0];
+  if (!state.stamps[today]) {
+    state.stamps[today] = { count: 0, kanji: [] };
+  }
+  const item = state.currentKanjiList[state.currentIndex];
+  if (item) {
+    state.stamps[today].count++;
+    if (!state.stamps[today].kanji.includes(item.k)) {
+      state.stamps[today].kanji.push(item.k);
+    }
+  }
+  // Update best streak
+  const streak = calcStreak();
+  if (streak > state.bestStreak) state.bestStreak = streak;
+  save();
+}
+
+function calcStreak() {
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const key = d.toISOString().split('T')[0];
+    if (state.stamps[key]) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function updateStampScreen() {
+  const streak = calcStreak();
+  document.getElementById('streakNum').textContent = streak;
+
+  const totalDays = Object.keys(state.stamps).length;
+  const totalMastered = Object.keys(state.mastered).length;
+  document.getElementById('statTotal').textContent = totalDays;
+  document.getElementById('statKanji').textContent = totalMastered;
+  document.getElementById('statStreak').textContent = state.bestStreak;
+
+  // Build calendar for current month
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const cal = document.getElementById('stampCalendar');
+  cal.innerHTML = '';
+
+  // Header
+  ['日','月','火','水','木','金','土'].forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'stamp-day-header';
+    h.textContent = d;
+    cal.appendChild(h);
+  });
+
+  // Empty days
+  for (let i = 0; i < firstDay.getDay(); i++) {
+    const empty = document.createElement('div');
+    empty.className = 'stamp-day empty';
+    cal.appendChild(empty);
+  }
+
+  // Days
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'stamp-day';
+    const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (state.stamps[key]) dayEl.classList.add('stamped');
+    if (d === now.getDate()) dayEl.classList.add('today');
+    dayEl.textContent = d;
+    cal.appendChild(dayEl);
+  }
+}
+
+// ===== EMAIL REPORT =====
+function sendReport() {
+  const streak = calcStreak();
+  const totalDays = Object.keys(state.stamps).length;
+  const totalMastered = Object.keys(state.mastered).length;
+  const g1m = Object.keys(state.mastered).filter(k => GRADE1.some(g => g.k === k)).length;
+  const g2m = Object.keys(state.mastered).filter(k => GRADE2_CLEAN.some(g => g.k === k)).length;
+  const today = new Date().toLocaleDateString('ja-JP');
+
+  const subject = encodeURIComponent(`【けんしんかんぺき漢字ドリル】学習レポート ${today}`);
+  const body = encodeURIComponent(
+`けんしんかんぺき漢字ドリル 学習レポート
+━━━━━━━━━━━━━━━━━━
+
+📅 日付: ${today}
+🔥 れんぞく日数: ${streak}日
+📚 れんしゅう日数: ${totalDays}日
+🏆 さいこうれんぞく: ${state.bestStreak}日
+
+━━━━━━━━━━━━━━━━━━
+📊 しんちょく
+
+1年生: ${g1m} / 80 字 クリア (${Math.round(g1m/80*100)}%)
+2年生: ${g2m} / ${GRADE2_CLEAN.length} 字 クリア (${Math.round(g2m/GRADE2_CLEAN.length*100)}%)
+合計: ${totalMastered} / ${80 + GRADE2_CLEAN.length} 字
+
+━━━━━━━━━━━━━━━━━━
+🦜 まいにちがんばっています！
+`);
+
+  window.location.href = `mailto:hatomamen@yahoo.co.jp?subject=${subject}&body=${body}`;
+  showToast('メールアプリをひらきます');
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// ===== STROKE ORDER =====
+let strokeOrderCache = {};
+let currentStrokePaths = [];
+let currentStrokeTimeout = null;
+
+function showStrokeOrder() {
+  const item = state.currentKanjiList[state.currentIndex];
+  if (item) loadAndShowStrokeOrder(item.k);
+}
+
+function showSentenceStrokeOrder() {
+  if (sentenceTestIndex < sentenceTestList.length) {
+    const item = sentenceTestList[sentenceTestIndex];
+    loadAndShowStrokeOrder(item.k);
+  }
+}
+
+async function loadAndShowStrokeOrder(kanji) {
+  const overlay = document.getElementById('strokeOverlay');
+  const container = document.getElementById('strokeSvgContainer');
+  const numEl = document.getElementById('strokeNumber');
+
+  overlay.classList.add('active');
+  container.innerHTML = '<div style="color:var(--mid-gray);font-size:14px;">よみこみ中...</div>';
+  numEl.textContent = '';
+
+  // Get the Unicode code point as hex (5 digits, zero-padded)
+  const code = kanji.codePointAt(0).toString(16).padStart(5, '0');
+
+  try {
+    let svgText;
+    if (strokeOrderCache[kanji]) {
+      svgText = strokeOrderCache[kanji];
+    } else {
+      const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg@master/kanji/${code}.svg`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('SVG not found');
+      svgText = await resp.text();
+      strokeOrderCache[kanji] = svgText;
+    }
+
+    // Parse the SVG and extract stroke paths
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const paths = doc.querySelectorAll('path');
+
+    if (paths.length === 0) throw new Error('No strokes found');
+
+    currentStrokePaths = Array.from(paths);
+
+    // Build a clean SVG for display
+    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgEl.setAttribute('viewBox', '0 0 109 109');
+    svgEl.setAttribute('width', '180');
+    svgEl.setAttribute('height', '180');
+
+    // Clone all paths with styling
+    currentStrokePaths.forEach((p, i) => {
+      const clone = p.cloneNode(true);
+      clone.setAttribute('fill', 'none');
+      clone.setAttribute('stroke', '#141413');
+      clone.setAttribute('stroke-width', '3');
+      clone.setAttribute('stroke-linecap', 'round');
+      clone.setAttribute('stroke-linejoin', 'round');
+      clone.setAttribute('opacity', '0');
+      clone.id = `stroke-display-${i}`;
+      svgEl.appendChild(clone);
+
+      // Add stroke number label
+      const pathData = p.getAttribute('d');
+      const startMatch = pathData.match(/^[Mm]\s*([\d.]+)[,\s]+([\d.]+)/);
+      if (startMatch) {
+        const numText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        numText.setAttribute('x', parseFloat(startMatch[1]) - 3);
+        numText.setAttribute('y', parseFloat(startMatch[2]) - 3);
+        numText.setAttribute('font-size', '8');
+        numText.setAttribute('fill', '#d97757');
+        numText.setAttribute('font-weight', '700');
+        numText.setAttribute('opacity', '0');
+        numText.id = `stroke-num-${i}`;
+        numText.textContent = i + 1;
+        svgEl.appendChild(numText);
+      }
+    });
+
+    container.innerHTML = '';
+    container.appendChild(svgEl);
+
+    numEl.textContent = `ぜんぶで ${currentStrokePaths.length} かく`;
+
+    // Animate strokes one by one
+    animateStrokes(svgEl);
+
+  } catch (e) {
+    // Fallback: show kanji in large text if SVG not available
+    container.innerHTML = `<div style="font-size:120px;font-weight:900;color:var(--dark);line-height:1;">${kanji}</div>`;
+    numEl.textContent = 'かきじゅんデータがみつかりません';
+  }
+}
+
+function animateStrokes(svgEl) {
+  if (currentStrokeTimeout) clearTimeout(currentStrokeTimeout);
+
+  const totalStrokes = currentStrokePaths.length;
+  let delay = 0;
+
+  for (let i = 0; i < totalStrokes; i++) {
+    const strokeEl = svgEl.querySelector(`#stroke-display-${i}`);
+    const numEl = svgEl.querySelector(`#stroke-num-${i}`);
+    if (!strokeEl) continue;
+
+    // Calculate path length for dash animation
+    currentStrokeTimeout = setTimeout(() => {
+      // Show previously drawn strokes in gray
+      for (let j = 0; j < i; j++) {
+        const prev = svgEl.querySelector(`#stroke-display-${j}`);
+        if (prev) {
+          prev.setAttribute('stroke', '#b0aea5');
+          prev.setAttribute('opacity', '1');
+          prev.style.strokeDasharray = '';
+          prev.style.strokeDashoffset = '';
+          prev.style.animation = '';
+        }
+      }
+
+      // Animate current stroke in red, then turn black
+      strokeEl.setAttribute('stroke', '#d97757');
+      strokeEl.setAttribute('stroke-width', '4');
+      strokeEl.setAttribute('opacity', '1');
+
+      // Animate using dasharray
+      const len = strokeEl.getTotalLength ? strokeEl.getTotalLength() : 200;
+      strokeEl.style.strokeDasharray = len;
+      strokeEl.style.strokeDashoffset = len;
+      strokeEl.style.setProperty('--stroke-len', len);
+      strokeEl.style.animation = `drawStroke 0.6s ease forwards`;
+
+      // Show number
+      if (numEl) numEl.setAttribute('opacity', '1');
+
+      // Update counter
+      document.getElementById('strokeNumber').textContent =
+        `${i + 1} / ${totalStrokes} かくめ`;
+
+      // After animation, change to black
+      setTimeout(() => {
+        strokeEl.setAttribute('stroke', '#141413');
+        strokeEl.setAttribute('stroke-width', '3');
+      }, 650);
+
+    }, delay);
+
+    delay += 800;
+  }
+
+  // Final state: all strokes black
+  currentStrokeTimeout = setTimeout(() => {
+    for (let j = 0; j < totalStrokes; j++) {
+      const s = svgEl.querySelector(`#stroke-display-${j}`);
+      if (s) {
+        s.setAttribute('stroke', '#141413');
+        s.setAttribute('stroke-width', '3');
+        s.setAttribute('opacity', '1');
+        s.style.strokeDasharray = '';
+        s.style.strokeDashoffset = '';
+        s.style.animation = '';
+      }
+    }
+    document.getElementById('strokeNumber').textContent =
+      `ぜんぶで ${totalStrokes} かく ✓`;
+  }, delay);
+}
+
+function replayStrokeOrder() {
+  const container = document.getElementById('strokeSvgContainer');
+  const svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+
+  // Reset all strokes
+  const totalStrokes = currentStrokePaths.length;
+  for (let i = 0; i < totalStrokes; i++) {
+    const s = svgEl.querySelector(`#stroke-display-${i}`);
+    const n = svgEl.querySelector(`#stroke-num-${i}`);
+    if (s) {
+      s.setAttribute('opacity', '0');
+      s.style.strokeDasharray = '';
+      s.style.strokeDashoffset = '';
+      s.style.animation = '';
+    }
+    if (n) n.setAttribute('opacity', '0');
+  }
+
+  animateStrokes(svgEl);
+}
+
+function closeStrokeOrder(e) {
+  // If called from overlay background click, only close if clicking the overlay itself
+  if (e && e.target && e.target.id !== 'strokeOverlay' && e.type === 'click') {
+    // Check if it was the button call (no event or explicit call)
+    return;
+  }
+  document.getElementById('strokeOverlay').classList.remove('active');
+  if (currentStrokeTimeout) clearTimeout(currentStrokeTimeout);
+}
+
+function closeStrokeOrderBtn() {
+  document.getElementById('strokeOverlay').classList.remove('active');
+  if (currentStrokeTimeout) clearTimeout(currentStrokeTimeout);
+}
+
+// ===== SENTENCE TEST =====
+let sentenceStrokeCount = 0;
+let sentenceDrawing = false;
+let sentenceLastX = 0, sentenceLastY = 0;
+let sentenceTestList = [];
+let sentenceTestIndex = 0;
+let sentenceTestResults = [];
+
+function startSentenceTest() {
+  const list = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  // Filter to only kanji that have sentence data
+  const withSentences = list.filter(item => KANJI_SENTENCES[item.k]);
+  if (withSentences.length === 0) {
+    showToast('ぶんしょうテストのデータがありません');
+    return;
+  }
+  // Shuffle and pick up to 10 random questions
+  const shuffled = [...withSentences].sort(() => Math.random() - 0.5);
+  sentenceTestList = shuffled.slice(0, 10);
+  sentenceTestIndex = 0;
+  sentenceTestResults = [];
+  loadSentence();
+  showScreen('sentenceScreen');
+}
+
+function startSentenceTestFrom(kanjiList) {
+  sentenceTestList = kanjiList.filter(item => KANJI_SENTENCES[item.k]);
+  if (sentenceTestList.length === 0) {
+    showToast('ぶんしょうテストのデータがありません');
+    return;
+  }
+  sentenceTestIndex = 0;
+  sentenceTestResults = [];
+  loadSentence();
+  showScreen('sentenceScreen');
+}
+
+function loadSentence() {
+  if (sentenceTestIndex >= sentenceTestList.length) {
+    showSentenceResults();
+    return;
+  }
+  const item = sentenceTestList[sentenceTestIndex];
+  const sData = KANJI_SENTENCES[item.k];
+
+  // Parse sentence: replace 【reading】 with highlighted span
+  const sentenceHTML = sData.q.replace(/【(.+?)】/g,
+    '<span class="sentence-reading">$1</span>');
+  document.getElementById('sentenceText').innerHTML = sentenceHTML;
+
+  // Extract reading for hint
+  const readingMatch = sData.q.match(/【(.+?)】/);
+  const reading = readingMatch ? readingMatch[1] : '';
+  document.getElementById('sentenceHint').innerHTML =
+    `「<span>${reading}</span>」をかんじで書こう！`;
+
+  document.getElementById('sentenceProgress').textContent =
+    `${sentenceTestIndex + 1} / ${sentenceTestList.length}`;
+
+  const messages = [
+    'けんしんくん、ぶんしょうをよく読んでかんがえよう！',
+    'どの漢字がはいるかな？けんしんくん！',
+    'よく読んで、ていねいに漢字を書いてね！',
+    'けんしんくんなら わかるよ！がんばれ！',
+    'ぶんしょうのなかの漢字、書けるかな？',
+    'すごいね！ちゃんとよめてるよ！',
+    'けんしんくん、読書がすきだからとくいだね！',
+  ];
+  document.getElementById('sentenceBirdMessage').textContent =
+    messages[Math.floor(Math.random() * messages.length)];
+  placeBird('sentenceBird', 36, 'normal');
+  placeKenshin('sentenceKenshin', 30, 'normal');
+
+  clearSentenceCanvas();
+}
+
+function submitSentenceAnswer() {
+  const item = sentenceTestList[sentenceTestIndex];
+  if (sentenceStrokeCount < 1) {
+    document.getElementById('sentenceBirdMessage').textContent =
+      'けんしんくん、まだなにも書いてないよ！漢字をかいてみて！';
+    placeBird('sentenceBird', 36, 'thinking');
+    placeKenshin('sentenceKenshin', 30, 'thinking');
+    return;
+  }
+
+  // Grade based on canvas coverage (same approach as tracing)
+  const canvas = document.getElementById('sentenceCanvas');
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  let filledPixels = 0;
+  for (let i = 3; i < pixels.length; i += 4) {
+    if (pixels[i] > 128) filledPixels++;
+  }
+  const coverage = filledPixels / (canvas.width * canvas.height);
+  const result = coverage > 0.008 && sentenceStrokeCount >= 1;
+
+  sentenceTestResults.push({ kanji: item.k, correct: result });
+
+  if (result) {
+    state.mastered[item.k] = true;
+    delete state.incorrect[item.k];
+    showStarEffect();
+    const praiseMessages = [
+      'すごい！ぶんしょうから漢字がわかったね！',
+      'けんしんくん天才！ばっちり！',
+      'やったね！漢字のちからがついてきてるよ！',
+      'さすが けんしんくん！かんぺき！',
+      'ぶんしょうテストもかんたんだね！',
+      'けんしんくん、読むちからもバッチリ！',
+    ];
+    document.getElementById('sentenceBirdMessage').textContent =
+      praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
+    placeBird('sentenceBird', 36, 'cheer');
+    placeKenshin('sentenceKenshin', 30, 'cheer');
+  } else {
+    state.incorrect[item.k] = true;
+    const encourageMessages = [
+      'おしい！もういちどチャレンジしよう！',
+      'だいじょうぶ！つぎはできるよ！',
+      'けんしんくん、あきらめないのがかっこいい！',
+    ];
+    document.getElementById('sentenceBirdMessage').textContent =
+      encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
+    placeBird('sentenceBird', 36, 'thinking');
+    placeKenshin('sentenceKenshin', 30, 'thinking');
+  }
+  save();
+  recordStamp();
+
+  setTimeout(() => {
+    sentenceTestIndex++;
+    loadSentence();
+  }, result ? 1200 : 800);
+}
+
+function skipSentence() {
+  sentenceTestIndex++;
+  loadSentence();
+}
+
+function exitSentenceTest() {
+  if (sentenceTestResults.length > 0) {
+    showSentenceResults();
+  } else {
+    showScreen('kanjiListScreen');
+  }
+}
+
+function showSentenceResults() {
+  const correct = sentenceTestResults.filter(r => r.correct).length;
+  const total = sentenceTestResults.length;
+
+  if (total === 0) {
+    showScreen('kanjiListScreen');
+    return;
+  }
+
+  const pct = Math.round((correct / total) * 100);
+  document.getElementById('resultScore').textContent = `${pct}%`;
+  document.getElementById('resultDetail').textContent =
+    `ぶんしょうテスト：${total}もん中 ${correct}もん せいかい！`;
+
+  let title = 'おつかれさま！';
+  let resultMood = 'normal';
+  if (pct === 100) { title = 'ぶんしょうテストもかんぺき！'; resultMood = 'cheer'; }
+  else if (pct >= 80) { title = 'けんしんくん すごい！'; resultMood = 'happy'; }
+  else if (pct >= 50) { title = 'よくがんばったね！'; resultMood = 'normal'; }
+  else { title = 'つぎもがんばろう！'; resultMood = 'thinking'; }
+  document.getElementById('resultTitle').textContent = title;
+  placeBird('resultBird', 70, resultMood);
+  placeKenshin('resultKenshin', 70, resultMood);
+
+  const hasIncorrect = sentenceTestResults.some(r => !r.correct);
+  document.getElementById('retryIncorrectBtn').style.display = hasIncorrect ? 'block' : 'none';
+
+  // Override retry button to use sentence test retry
+  document.getElementById('retryIncorrectBtn').onclick = function() {
+    const incorrectKanji = sentenceTestResults.filter(r => !r.correct).map(r => r.kanji);
+    const allList = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+    const retryList = allList.filter(item => incorrectKanji.includes(item.k));
+    if (retryList.length > 0) {
+      startSentenceTestFrom(retryList);
+    }
+  };
+
+  showScreen('resultScreen');
+}
+
+// Sentence canvas (smaller, separate from main practice canvas)
+function initSentenceCanvas() {
+  const canvas = document.getElementById('sentenceCanvas');
+  const wrapper = canvas.parentElement;
+
+  function resizeCanvas() {
+    const rect = wrapper.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#141413';
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+        pressure: e.touches[0].force || 0.5
+      };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: 0.5 };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    sentenceDrawing = true;
+    const pos = getPos(e);
+    sentenceLastX = pos.x;
+    sentenceLastY = pos.y;
+    sentenceStrokeCount++;
+  }
+
+  function draw(e) {
+    e.preventDefault();
+    if (!sentenceDrawing) return;
+    const pos = getPos(e);
+    const ctx = canvas.getContext('2d');
+    const pressure = pos.pressure || 0.5;
+    ctx.lineWidth = 2 + pressure * 6;
+    ctx.beginPath();
+    ctx.moveTo(sentenceLastX, sentenceLastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    sentenceLastX = pos.x;
+    sentenceLastY = pos.y;
+  }
+
+  function endDraw(e) {
+    if (e) e.preventDefault();
+    sentenceDrawing = false;
+  }
+
+  canvas.addEventListener('pointerdown', startDraw, { passive: false });
+  canvas.addEventListener('pointermove', draw, { passive: false });
+  canvas.addEventListener('pointerup', endDraw, { passive: false });
+  canvas.addEventListener('pointercancel', endDraw, { passive: false });
+  canvas.addEventListener('pointerleave', endDraw, { passive: false });
+  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+}
+
+function clearSentenceCanvas() {
+  const canvas = document.getElementById('sentenceCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  sentenceStrokeCount = 0;
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  initCanvas();
+  initSentenceCanvas();
+  // Place 3D birds
+  placeBird('titleBird', 100, 'happy');
+  placeBird('gradeBird', 56, 'cheer');
+  placeBird('speechBird', 36, 'normal');
+  placeBird('resultBird', 70, 'happy');
+  // Place Kenshin-kun
+  placeKenshin('titleKenshin', 100, 'cheer');
+  placeKenshin('gradeKenshin', 56, 'happy');
+  placeKenshin('speechKenshin', 30, 'normal');
+  placeKenshin('resultKenshin', 70, 'happy');
+  // Background birds
+  initBackgroundBirds();
+});
+</script>
+</body>
+</html>
