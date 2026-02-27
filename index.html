@@ -413,6 +413,15 @@
     100% { transform: translate(-50%, -80%) scale(0.8); opacity: 0; }
   }
 
+  /* ===== BATSU (wrong stroke order) ===== */
+  @keyframes batsuPop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    20% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    40% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+    75% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
@@ -1697,6 +1706,9 @@ function loadKanji() {
   placeKenshin('speechKenshin', 30, 'normal');
 
   clearCanvas();
+
+  // 書き順チェック用：KanjiVGデータを取得
+  fetchStrokeData(item.k);
 }
 
 function submitKanji() {
@@ -1768,8 +1780,119 @@ function exitPractice() {
   }
 }
 
-// ===== GRADING =====
+// ===== GRADING (書き順チェック付き) =====
 let strokeCount = 0;
+let expectedStrokes = [];    // KanjiVGから取得した各ストロークの開始点 [{x,y}, ...]（0〜1の正規化座標）
+let strokeOrderErrors = 0;   // 書き順ミスの回数
+let strokeStartPositions = []; // ユーザーが書いた各ストロークの開始点
+
+// 漢字をロードするときにKanjiVGデータも取得
+async function fetchStrokeData(kanji) {
+  expectedStrokes = [];
+  strokeOrderErrors = 0;
+  strokeStartPositions = [];
+  const code = kanji.codePointAt(0).toString(16).padStart(5, '0');
+  try {
+    let svgText;
+    if (strokeOrderCache[kanji]) {
+      svgText = strokeOrderCache[kanji];
+    } else {
+      const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg@master/kanji/${code}.svg`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('not found');
+      svgText = await resp.text();
+      strokeOrderCache[kanji] = svgText;
+    }
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const paths = doc.querySelectorAll('path');
+    // KanjiVGのviewBoxは 0 0 109 109
+    paths.forEach(p => {
+      const d = p.getAttribute('d');
+      const m = d.match(/^[Mm]\s*([\d.]+)[,\s]+([\d.]+)/);
+      if (m) {
+        expectedStrokes.push({
+          x: parseFloat(m[1]) / 109,  // 0〜1に正規化
+          y: parseFloat(m[2]) / 109
+        });
+      }
+    });
+  } catch(e) {
+    // オフライン等の場合は書き順チェックなし
+    expectedStrokes = [];
+  }
+}
+
+// ストローク開始時に書き順をチェック
+function checkStrokeOrder(canvasX, canvasY, canvas) {
+  if (expectedStrokes.length === 0) return true; // データなしはスキップ
+
+  const rect = canvas.getBoundingClientRect();
+  const normX = canvasX / rect.width;
+  const normY = canvasY / rect.height;
+
+  const currentStrokeIndex = strokeStartPositions.length; // 0-indexed
+  strokeStartPositions.push({x: normX, y: normY});
+
+  if (currentStrokeIndex >= expectedStrokes.length) return true; // 余分な画はOK
+
+  const expected = expectedStrokes[currentStrokeIndex];
+  const dx = normX - expected.x;
+  const dy = normY - expected.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // 許容範囲: 0.25（全体の25%以内ならOK）— 子供向けなので緩め
+  if (distance > 0.25) {
+    strokeOrderErrors++;
+    showStrokeOrderError();
+    return false;
+  }
+  return true;
+}
+
+// 書き順エラー時のバツ演出
+function showStrokeOrderError() {
+  // ブブー音
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = 'square';
+    o.frequency.value = 200;
+    g.gain.setValueAtTime(0.2, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.4);
+    o.connect(g);
+    g.connect(ac.destination);
+    o.start(ac.currentTime);
+    o.stop(ac.currentTime + 0.4);
+  } catch(e) {}
+
+  // ✗ エフェクト
+  const batsu = document.createElement('div');
+  batsu.style.cssText = `
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
+    font-size:120px; color:#e74c3c; font-weight:900; z-index:10002;
+    pointer-events:none; text-shadow: 3px 3px 0 white, -3px -3px 0 white, 3px -3px 0 white, -3px 3px 0 white;
+    animation: batsuPop 0.6s ease-out forwards;
+  `;
+  batsu.textContent = '✗';
+  document.body.appendChild(batsu);
+
+  // 「かきじゅんがちがうよ」メッセージ
+  const msg = document.createElement('div');
+  msg.style.cssText = `
+    position:fixed; top:62%; left:50%; transform:translate(-50%,-50%) scale(0);
+    font-size:18px; color:#e74c3c; font-weight:700; z-index:10002;
+    pointer-events:none; background:white; padding:8px 16px; border-radius:12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    animation: batsuPop 0.6s ease-out 0.1s forwards;
+  `;
+  const hints = ['かきじゅんがちがうよ！', 'じゅんばんをよく見て！', 'かきじゅんに気をつけて！'];
+  msg.textContent = hints[Math.floor(Math.random() * hints.length)];
+  document.body.appendChild(msg);
+
+  setTimeout(() => { batsu.remove(); msg.remove(); }, 1200);
+}
 
 function gradeKanji() {
   const canvas = document.getElementById('drawCanvas');
@@ -1781,8 +1904,22 @@ function gradeKanji() {
     if (pixels[i] > 128) filledPixels++;
   }
   const coverage = filledPixels / (canvas.width * canvas.height);
-  // Accept if there's reasonable coverage (user actually wrote something)
-  return coverage > 0.008 && strokeCount >= 1;
+  const drewEnough = coverage > 0.008 && strokeCount >= 1;
+
+  // 書き順エラーがあったらバツ
+  if (strokeOrderErrors > 0) return false;
+
+  // 画数チェック：KanjiVGデータがある場合、画数が大きくずれていたらバツ
+  // （許容範囲: 期待画数の±2画、ただし1画の漢字は±1）
+  if (expectedStrokes.length > 0) {
+    const expectedCount = expectedStrokes.length;
+    const tolerance = expectedCount <= 2 ? 1 : 2;
+    if (Math.abs(strokeCount - expectedCount) > tolerance) {
+      return false; // 画数が違いすぎる = 違う字の可能性
+    }
+  }
+
+  return drewEnough;
 }
 
 // ===== RESULTS =====
@@ -1944,7 +2081,11 @@ function setupDrawCanvas(canvas, mode) {
     const pos = getPos(e);
     lastX = pos.x;
     lastY = pos.y;
-    if (mode === 'main') strokeCount++;
+    if (mode === 'main') {
+      strokeCount++;
+      // 書き順チェック（なぞり書きモードのみ）
+      checkStrokeOrder(pos.x, pos.y, canvas);
+    }
     else sentenceStrokeCount++;
 
     // Draw a dot at the start point
@@ -1998,7 +2139,10 @@ function setupDrawCanvas(canvas, mode) {
     drawing = true;
     lastX = touch.clientX - rect.left;
     lastY = touch.clientY - rect.top;
-    if (mode === 'main') strokeCount++;
+    if (mode === 'main') {
+      strokeCount++;
+      checkStrokeOrder(lastX, lastY, canvas);
+    }
     else sentenceStrokeCount++;
   }, { passive: false });
 
@@ -2037,6 +2181,8 @@ function clearCanvas() {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   strokeCount = 0;
+  strokeOrderErrors = 0;
+  strokeStartPositions = [];
 }
 
 // ===== STAMPS =====
