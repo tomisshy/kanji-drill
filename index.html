@@ -1533,6 +1533,20 @@ function showScreen(id) {
   if (id === 'gradeScreen') updateGradeScreen();
   if (id === 'kanjiListScreen') updateKanjiList();
   if (id === 'stampScreen') updateStampScreen();
+
+  // Resize canvases when their screen becomes visible
+  if (id === 'practiceScreen') {
+    setTimeout(() => {
+      const c = document.getElementById('drawCanvas');
+      if (c && c._resizeCanvas) c._resizeCanvas();
+    }, 50);
+  }
+  if (id === 'sentenceScreen') {
+    setTimeout(() => {
+      const c = document.getElementById('sentenceCanvas');
+      if (c && c._resizeCanvas) c._resizeCanvas();
+    }, 50);
+  }
 }
 
 // ===== GRADE SCREEN =====
@@ -1791,10 +1805,19 @@ function showStarEffect() {
 // ===== CANVAS (Apple Pencil Support) =====
 function initCanvas() {
   const canvas = document.getElementById('drawCanvas');
-  const wrapper = canvas.parentElement;
+  setupDrawCanvas(canvas, 'main');
+}
 
+// Shared canvas setup for both practice and sentence canvases
+function setupDrawCanvas(canvas, mode) {
+  const wrapper = canvas.parentElement;
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+
+  // Resize function — must be called when canvas is VISIBLE
   function resizeCanvas() {
     const rect = wrapper.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return; // skip if hidden
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     canvas.style.width = rect.width + 'px';
@@ -1806,41 +1829,50 @@ function initCanvas() {
     ctx.strokeStyle = '#141413';
   }
 
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+  // Store resize function so we can call it when screen becomes visible
+  canvas._resizeCanvas = resizeCanvas;
 
-  let drawing = false;
-  let lastX = 0, lastY = 0;
+  window.addEventListener('resize', resizeCanvas);
 
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
-    if (e.touches) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-        pressure: e.touches[0].force || 0.5
-      };
-    }
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: 0.5 };
+    // Pointer Events (Apple Pencil, stylus, mouse, touch)
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      pressure: e.pressure !== undefined ? e.pressure : 0.5
+    };
   }
 
   function startDraw(e) {
     e.preventDefault();
+    e.stopPropagation();
     drawing = true;
     const pos = getPos(e);
     lastX = pos.x;
     lastY = pos.y;
-    strokeCount++;
+    if (mode === 'main') strokeCount++;
+    else sentenceStrokeCount++;
+
+    // Draw a dot at the start point
+    const ctx = canvas.getContext('2d');
+    const pressure = pos.pressure || 0.5;
+    ctx.lineWidth = 2 + pressure * 6;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#141413';
+    ctx.fill();
   }
 
   function draw(e) {
     e.preventDefault();
+    e.stopPropagation();
     if (!drawing) return;
     const pos = getPos(e);
     const ctx = canvas.getContext('2d');
-    // Pressure-sensitive line width (Apple Pencil)
     const pressure = pos.pressure || 0.5;
     ctx.lineWidth = 2 + pressure * 6;
+    ctx.strokeStyle = '#141413';
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(pos.x, pos.y);
@@ -1850,20 +1882,61 @@ function initCanvas() {
   }
 
   function endDraw(e) {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     drawing = false;
   }
 
-  // Pointer events for Apple Pencil
+  // Pointer events (works with Apple Pencil, finger, mouse)
   canvas.addEventListener('pointerdown', startDraw, { passive: false });
   canvas.addEventListener('pointermove', draw, { passive: false });
   canvas.addEventListener('pointerup', endDraw, { passive: false });
   canvas.addEventListener('pointercancel', endDraw, { passive: false });
   canvas.addEventListener('pointerleave', endDraw, { passive: false });
 
-  // Prevent scrolling on canvas
-  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-  canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  // Touch event fallback for older iOS
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    drawing = true;
+    lastX = touch.clientX - rect.left;
+    lastY = touch.clientY - rect.top;
+    if (mode === 'main') strokeCount++;
+    else sentenceStrokeCount++;
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!drawing) return;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    const ctx = canvas.getContext('2d');
+    const force = touch.force || 0.5;
+    ctx.lineWidth = 2 + force * 6;
+    ctx.strokeStyle = '#141413';
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    lastX = x;
+    lastY = y;
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    drawing = false;
+  }, { passive: false });
+
+  canvas.addEventListener('touchcancel', function(e) {
+    drawing = false;
+  }, { passive: false });
 }
 
 function clearCanvas() {
@@ -2399,75 +2472,10 @@ function showSentenceResults() {
   showScreen('resultScreen');
 }
 
-// Sentence canvas (smaller, separate from main practice canvas)
+// Sentence canvas — uses shared setup
 function initSentenceCanvas() {
   const canvas = document.getElementById('sentenceCanvas');
-  const wrapper = canvas.parentElement;
-
-  function resizeCanvas() {
-    const rect = wrapper.getBoundingClientRect();
-    canvas.width = rect.width * 2;
-    canvas.height = rect.height * 2;
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-    const ctx = canvas.getContext('2d');
-    ctx.scale(2, 2);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#141413';
-  }
-
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    if (e.touches) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-        pressure: e.touches[0].force || 0.5
-      };
-    }
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: 0.5 };
-  }
-
-  function startDraw(e) {
-    e.preventDefault();
-    sentenceDrawing = true;
-    const pos = getPos(e);
-    sentenceLastX = pos.x;
-    sentenceLastY = pos.y;
-    sentenceStrokeCount++;
-  }
-
-  function draw(e) {
-    e.preventDefault();
-    if (!sentenceDrawing) return;
-    const pos = getPos(e);
-    const ctx = canvas.getContext('2d');
-    const pressure = pos.pressure || 0.5;
-    ctx.lineWidth = 2 + pressure * 6;
-    ctx.beginPath();
-    ctx.moveTo(sentenceLastX, sentenceLastY);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-    sentenceLastX = pos.x;
-    sentenceLastY = pos.y;
-  }
-
-  function endDraw(e) {
-    if (e) e.preventDefault();
-    sentenceDrawing = false;
-  }
-
-  canvas.addEventListener('pointerdown', startDraw, { passive: false });
-  canvas.addEventListener('pointermove', draw, { passive: false });
-  canvas.addEventListener('pointerup', endDraw, { passive: false });
-  canvas.addEventListener('pointercancel', endDraw, { passive: false });
-  canvas.addEventListener('pointerleave', endDraw, { passive: false });
-  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-  canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  setupDrawCanvas(canvas, 'sentence');
 }
 
 function clearSentenceCanvas() {
