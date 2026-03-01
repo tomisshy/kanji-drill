@@ -43,7 +43,7 @@
   }
 
   /* ===== SCREENS ===== */
-  .screen { display: none; min-height: 100vh; padding: 20px; padding-bottom: 40px; }
+  .screen { display: none; min-height: 100vh; padding: 20px; padding-bottom: 40px; box-sizing: border-box; }
   .screen.active { display: flex; flex-direction: column; }
 
   /* ===== TITLE SCREEN ===== */
@@ -257,10 +257,13 @@
 
   /* ===== SENTENCE TEST SCREEN ===== */
   #sentenceScreen {
-    align-items: center; padding: 6px 12px;
-    gap: 3px; height: 100vh; max-height: 100vh;
-    overflow: hidden; justify-content: center;
+    align-items: center; padding: 8px 12px !important;
+    gap: 4px !important; height: 100vh; max-height: 100vh;
+    overflow: hidden; justify-content: center !important;
     position: fixed; inset: 0; z-index: 2; background: var(--bg);
+  }
+  #sentenceScreen > * {
+    margin: 0 !important; flex-shrink: 0;
   }
   .sentence-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; position: relative; z-index: 1; }
   .sentence-info { flex: 1; }
