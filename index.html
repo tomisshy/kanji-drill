@@ -196,7 +196,7 @@
 
   /* ===== BIRD SPEECH ===== */
   .bird-speech {
-    display: flex; align-items: flex-start; gap: 8px;
+    display: flex; align-items: center; gap: 8px;
     background: var(--card-bg); padding: 8px 12px; border-radius: var(--radius-sm);
     box-shadow: var(--shadow); width: 100%; max-width: 500px;
     min-height: 40px; position: relative; flex-shrink: 0; z-index: 1;
@@ -258,7 +258,7 @@
   /* ===== SENTENCE TEST SCREEN ===== */
   #sentenceScreen {
     align-items: center; padding: 10px 12px !important;
-    gap: 10px !important; height: 100vh; max-height: 100vh;
+    gap: 7px !important; height: 100vh; max-height: 100vh;
     overflow: hidden; justify-content: space-evenly !important;
     position: fixed; inset: 0; z-index: 2; background: var(--bg);
   }
@@ -1734,8 +1734,8 @@ function loadKanji() {
   ];
   document.getElementById('birdMessage').textContent =
     messages[Math.floor(Math.random() * messages.length)];
-  placeBird('speechBird', 36, 'normal');
-  placeKenshin('speechKenshin', 60, 'normal');
+  placeBird('speechBird', 56, 'normal');
+  placeKenshin('speechKenshin', 36, 'normal');
 
   clearCanvas();
 
@@ -1748,8 +1748,8 @@ function submitKanji() {
   // Check if user drew something
   if (strokeCount < 1) {
     document.getElementById('birdMessage').textContent = 'けんしんくん、まだなにも書いてないよ！書いてみて！';
-    placeBird('speechBird', 36, 'thinking');
-    placeKenshin('speechKenshin', 60, 'thinking');
+    placeBird('speechBird', 56, 'thinking');
+    placeKenshin('speechKenshin', 36, 'thinking');
     return;
   }
 
@@ -1775,8 +1775,8 @@ function submitKanji() {
     ];
     document.getElementById('birdMessage').textContent =
       praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
-    placeBird('speechBird', 36, 'cheer');
-    placeKenshin('speechKenshin', 60, 'cheer');
+    placeBird('speechBird', 56, 'cheer');
+    placeKenshin('speechKenshin', 36, 'cheer');
   } else {
     state.incorrect[item.k] = true;
     showWrongAnswerEffect(item.k);
@@ -1788,8 +1788,8 @@ function submitKanji() {
     ];
     document.getElementById('birdMessage').textContent =
       encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
-    placeBird('speechBird', 36, 'thinking');
-    placeKenshin('speechKenshin', 60, 'thinking');
+    placeBird('speechBird', 56, 'thinking');
+    placeKenshin('speechKenshin', 36, 'thinking');
   }
   save();
   recordStamp();
@@ -2703,8 +2703,8 @@ function loadSentence() {
   ];
   document.getElementById('sentenceBirdMessage').textContent =
     messages[Math.floor(Math.random() * messages.length)];
-  placeBird('sentenceBird', 36, 'normal');
-  placeKenshin('sentenceKenshin', 60, 'normal');
+  placeBird('sentenceBird', 56, 'normal');
+  placeKenshin('sentenceKenshin', 36, 'normal');
 
   clearSentenceCanvas();
 
@@ -2742,8 +2742,8 @@ function submitSentenceAnswer() {
   if (sentenceStrokeCount < 1) {
     document.getElementById('sentenceBirdMessage').textContent =
       'けんしんくん、まだなにも書いてないよ！漢字をかいてみて！';
-    placeBird('sentenceBird', 36, 'thinking');
-    placeKenshin('sentenceKenshin', 60, 'thinking');
+    placeBird('sentenceBird', 56, 'thinking');
+    placeKenshin('sentenceKenshin', 36, 'thinking');
     return;
   }
 
@@ -2766,8 +2766,8 @@ function submitSentenceAnswer() {
     ];
     document.getElementById('sentenceBirdMessage').textContent =
       praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
-    placeBird('sentenceBird', 36, 'cheer');
-    placeKenshin('sentenceKenshin', 60, 'cheer');
+    placeBird('sentenceBird', 56, 'cheer');
+    placeKenshin('sentenceKenshin', 36, 'cheer');
   } else {
     state.incorrect[item.k] = true;
     showWrongAnswerEffect(item.k);
@@ -2778,8 +2778,8 @@ function submitSentenceAnswer() {
     ];
     document.getElementById('sentenceBirdMessage').textContent =
       encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
-    placeBird('sentenceBird', 36, 'thinking');
-    placeKenshin('sentenceKenshin', 60, 'thinking');
+    placeBird('sentenceBird', 56, 'thinking');
+    placeKenshin('sentenceKenshin', 36, 'thinking');
   }
   save();
   recordStamp();
@@ -2909,13 +2909,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Other birds
   placeBird('gradeBird', 56, 'cheer');
-  placeBird('speechBird', 36, 'normal');
+  placeBird('speechBird', 56, 'normal');
   placeBird('resultBird', 70, 'happy');
   // Place Kenshin-kun & Shinkai-kun
   placeKenshin('titleKenshin', 100, 'cheer');
   placeShinkai('titleShinkai', 100);
   placeKenshin('gradeKenshin', 112, 'happy');
-  placeKenshin('speechKenshin', 60, 'normal');
+  placeKenshin('speechKenshin', 36, 'normal');
   placeKenshin('resultKenshin', 140, 'happy');
   // Background birds
   initBackgroundBirds();
