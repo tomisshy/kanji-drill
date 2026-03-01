@@ -1881,8 +1881,8 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const dy = normY - expected.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // 許容範囲: 0.15（全体の15%以内ならOK）
-  if (distance > 0.15) {
+  // 許容範囲: 0.22（全体の22%以内ならOK — 子供の字のブレに対応）
+  if (distance > 0.22) {
     strokeOrderErrors++;
     maybeShowStrokeOrderError();
     return false;
@@ -1890,31 +1890,32 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   return true;
 }
 
-// バツ演出（2秒以上間隔を空ける）
+// バツ演出（最初も含め必ず2秒待ってから表示、連続も2秒以上空ける）
 function maybeShowStrokeOrderError() {
   const now = Date.now();
-  if (now - lastBatsuTime < 2000) return; // 2秒以内はスキップ
+  if (lastBatsuTime > 0 && now - lastBatsuTime < 2000) return; // 連続は2秒以内スキップ
   lastBatsuTime = now;
 
-  // 少し待ってから表示（書いてる途中に邪魔しない）
-  setTimeout(() => showStrokeOrderError(), 400);
+  // 2秒待ってから表示（書いてる途中に邪魔しない）
+  setTimeout(() => showStrokeOrderError(), 2000);
 }
 
-// 書き順エラー時のバツ演出
+// 書き順エラー時のバツ演出（やさしめ）
 function showStrokeOrderError() {
-  // ブブー音
+  // ポロン♪ やさしい音（sine波で短く）
   try {
     const ac = new (window.AudioContext || window.webkitAudioContext)();
     const o = ac.createOscillator();
     const g = ac.createGain();
-    o.type = 'square';
-    o.frequency.value = 200;
-    g.gain.setValueAtTime(0.15, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.3);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(440, ac.currentTime);
+    o.frequency.linearRampToValueAtTime(330, ac.currentTime + 0.3);
+    g.gain.setValueAtTime(0.12, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.4);
     o.connect(g);
     g.connect(ac.destination);
     o.start(ac.currentTime);
-    o.stop(ac.currentTime + 0.3);
+    o.stop(ac.currentTime + 0.4);
   } catch(e) {}
 
   // ✗ エフェクト
