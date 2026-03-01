@@ -258,7 +258,7 @@
   /* ===== SENTENCE TEST SCREEN ===== */
   #sentenceScreen {
     align-items: center; padding: 10px 12px !important;
-    gap: 8px !important; height: 100vh; max-height: 100vh;
+    gap: 10px !important; height: 100vh; max-height: 100vh;
     overflow: hidden; justify-content: space-evenly !important;
     position: fixed; inset: 0; z-index: 2; background: var(--bg);
   }
@@ -1773,6 +1773,7 @@ function submitKanji() {
     placeKenshin('speechKenshin', 60, 'cheer');
   } else {
     state.incorrect[item.k] = true;
+    showWrongAnswerEffect(item.k);
     const encourageMessages = [
       'おしい！けんしんくんなら次はできるよ！',
       'だいじょうぶ！もういちど書いてみよう！',
@@ -1790,7 +1791,7 @@ function submitKanji() {
   setTimeout(() => {
     state.currentIndex++;
     loadKanji();
-  }, result ? 1200 : 800);
+  }, result ? 1200 : 1500);
 }
 
 function skipKanji() {
@@ -1935,13 +1936,13 @@ function gradeKanji() {
   // 書き順エラーがあったらバツ
   if (strokeOrderErrors > 0) return false;
 
-  // 画数チェック：KanjiVGデータがある場合、画数が大きくずれていたらバツ
-  // （許容範囲: 期待画数の±2画、ただし1画の漢字は±1）
+  // 画数チェック：KanjiVGデータがある場合、画数がずれていたらバツ
+  // （許容範囲: 期待画数の±1画、ただし画数が多い漢字(8画以上)は±2）
   if (expectedStrokes.length > 0) {
     const expectedCount = expectedStrokes.length;
-    const tolerance = expectedCount <= 2 ? 1 : 2;
+    const tolerance = expectedCount >= 8 ? 2 : 1;
     if (Math.abs(strokeCount - expectedCount) > tolerance) {
-      return false; // 画数が違いすぎる = 違う字の可能性
+      return false; // 画数が違う = 違う字の可能性
     }
   }
 
@@ -2075,6 +2076,49 @@ function showStarEffect() {
   }
 }
 
+// 不正解時のバツ演出（ブブー音 + ✗ + 正解を表示）
+function showWrongAnswerEffect(correctKanji) {
+  // ブブー音
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = 'square';
+    o.frequency.value = 180;
+    g.gain.setValueAtTime(0.2, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.5);
+    o.connect(g);
+    g.connect(ac.destination);
+    o.start(ac.currentTime);
+    o.stop(ac.currentTime + 0.5);
+  } catch(e) {}
+
+  // ✗ エフェクト
+  const batsu = document.createElement('div');
+  batsu.style.cssText = `
+    position:fixed; top:45%; left:50%; transform:translate(-50%,-50%) scale(0);
+    font-size:140px; color:#e74c3c; font-weight:900; z-index:10002;
+    pointer-events:none; text-shadow: 3px 3px 0 white, -3px -3px 0 white, 3px -3px 0 white, -3px 3px 0 white;
+    animation: batsuPop 1.0s ease-out forwards;
+  `;
+  batsu.textContent = '✗';
+  document.body.appendChild(batsu);
+  setTimeout(() => batsu.remove(), 1200);
+
+  // 正解の漢字を表示
+  const answer = document.createElement('div');
+  answer.style.cssText = `
+    position:fixed; top:60%; left:50%; transform:translate(-50%,-50%) scale(0);
+    font-size:20px; color:#555; font-weight:700; z-index:10002;
+    pointer-events:none; background:white; padding:10px 20px; border-radius:12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); text-align:center;
+    animation: batsuPop 0.8s ease-out 0.2s forwards;
+  `;
+  answer.innerHTML = `こたえ：<span style="font-size:36px;color:#e74c3c;vertical-align:middle;">${correctKanji}</span>`;
+  document.body.appendChild(answer);
+  setTimeout(() => answer.remove(), 1500);
+}
+
 // ===== CANVAS (Apple Pencil Support) =====
 function initCanvas() {
   const canvas = document.getElementById('drawCanvas');
@@ -2126,10 +2170,11 @@ function setupDrawCanvas(canvas, mode) {
     lastY = pos.y;
     if (mode === 'main') {
       strokeCount++;
-      // 書き順チェック（なぞり書きモードのみ）
-      checkStrokeOrder(pos.x, pos.y, canvas);
+    } else {
+      sentenceStrokeCount++;
     }
-    else sentenceStrokeCount++;
+    // 両モードとも書き順チェック
+    checkStrokeOrder(pos.x, pos.y, canvas);
 
     // Draw a dot at the start point
     const ctx = canvas.getContext('2d');
@@ -2184,9 +2229,11 @@ function setupDrawCanvas(canvas, mode) {
     lastY = touch.clientY - rect.top;
     if (mode === 'main') {
       strokeCount++;
-      checkStrokeOrder(lastX, lastY, canvas);
+    } else {
+      sentenceStrokeCount++;
     }
-    else sentenceStrokeCount++;
+    // 両モードとも書き順チェック
+    checkStrokeOrder(lastX, lastY, canvas);
   }, { passive: false });
 
   canvas.addEventListener('touchmove', function(e) {
@@ -2638,6 +2685,36 @@ function loadSentence() {
   placeKenshin('sentenceKenshin', 60, 'normal');
 
   clearSentenceCanvas();
+
+  // 文章テストでも書き順データを取得
+  fetchStrokeData(item.k);
+}
+
+function gradeSentenceKanji() {
+  const canvas = document.getElementById('sentenceCanvas');
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  let filledPixels = 0;
+  for (let i = 3; i < pixels.length; i += 4) {
+    if (pixels[i] > 128) filledPixels++;
+  }
+  const coverage = filledPixels / (canvas.width * canvas.height);
+  const drewEnough = coverage > 0.008 && sentenceStrokeCount >= 1;
+
+  // 書き順エラーがあったらバツ
+  if (strokeOrderErrors > 0) return false;
+
+  // 画数チェック（KanjiVGデータがあれば）
+  if (expectedStrokes.length > 0) {
+    const expectedCount = expectedStrokes.length;
+    const tolerance = expectedCount <= 3 ? 1 : 2;
+    if (Math.abs(sentenceStrokeCount - expectedCount) > tolerance) {
+      return false;
+    }
+  }
+
+  return drewEnough;
 }
 
 function submitSentenceAnswer() {
@@ -2650,17 +2727,8 @@ function submitSentenceAnswer() {
     return;
   }
 
-  // Grade based on canvas coverage (same approach as tracing)
-  const canvas = document.getElementById('sentenceCanvas');
-  const ctx = canvas.getContext('2d');
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const pixels = imageData.data;
-  let filledPixels = 0;
-  for (let i = 3; i < pixels.length; i += 4) {
-    if (pixels[i] > 128) filledPixels++;
-  }
-  const coverage = filledPixels / (canvas.width * canvas.height);
-  const result = coverage > 0.008 && sentenceStrokeCount >= 1;
+  // 書き順 + 画数 + カバレッジで判定
+  const result = gradeSentenceKanji();
 
   sentenceTestResults.push({ kanji: item.k, correct: result });
 
@@ -2682,6 +2750,7 @@ function submitSentenceAnswer() {
     placeKenshin('sentenceKenshin', 60, 'cheer');
   } else {
     state.incorrect[item.k] = true;
+    showWrongAnswerEffect(item.k);
     const encourageMessages = [
       'おしい！もういちどチャレンジしよう！',
       'だいじょうぶ！つぎはできるよ！',
@@ -2698,7 +2767,7 @@ function submitSentenceAnswer() {
   setTimeout(() => {
     sentenceTestIndex++;
     loadSentence();
-  }, result ? 1200 : 800);
+  }, result ? 1200 : 1500);
 }
 
 function skipSentence() {
@@ -2765,6 +2834,8 @@ function clearSentenceCanvas() {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   sentenceStrokeCount = 0;
+  strokeOrderErrors = 0;
+  strokeStartPositions = [];
 }
 
 // 文章テスト画面にも背景に鳥を飛ばす
