@@ -257,9 +257,9 @@
 
   /* ===== SENTENCE TEST SCREEN ===== */
   #sentenceScreen {
-    align-items: center; padding: 10px 12px;
-    gap: 6px; height: 100vh; max-height: 100vh;
-    overflow: hidden; justify-content: space-between;
+    align-items: center; padding: 6px 12px;
+    gap: 3px; height: 100vh; max-height: 100vh;
+    overflow: hidden; justify-content: center;
     position: fixed; inset: 0; z-index: 2; background: var(--bg);
   }
   .sentence-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; position: relative; z-index: 1; }
@@ -268,7 +268,7 @@
   .sentence-progress-text { font-size: 12px; color: var(--mid-gray); text-align: right; }
 
   .sentence-card {
-    background: var(--card-bg); border-radius: var(--radius); padding: 24px 20px;
+    background: var(--card-bg); border-radius: var(--radius); padding: 14px 16px;
     box-shadow: var(--shadow); width: 100%; max-width: 500px; text-align: center;
     position: relative; z-index: 1;
   }
@@ -1726,7 +1726,7 @@ function loadKanji() {
   document.getElementById('birdMessage').textContent =
     messages[Math.floor(Math.random() * messages.length)];
   placeBird('speechBird', 36, 'normal');
-  placeKenshin('speechKenshin', 30, 'normal');
+  placeKenshin('speechKenshin', 60, 'normal');
 
   clearCanvas();
 
@@ -1740,7 +1740,7 @@ function submitKanji() {
   if (strokeCount < 1) {
     document.getElementById('birdMessage').textContent = 'けんしんくん、まだなにも書いてないよ！書いてみて！';
     placeBird('speechBird', 36, 'thinking');
-    placeKenshin('speechKenshin', 30, 'thinking');
+    placeKenshin('speechKenshin', 60, 'thinking');
     return;
   }
 
@@ -1767,7 +1767,7 @@ function submitKanji() {
     document.getElementById('birdMessage').textContent =
       praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
     placeBird('speechBird', 36, 'cheer');
-    placeKenshin('speechKenshin', 30, 'cheer');
+    placeKenshin('speechKenshin', 60, 'cheer');
   } else {
     state.incorrect[item.k] = true;
     const encourageMessages = [
@@ -1779,7 +1779,7 @@ function submitKanji() {
     document.getElementById('birdMessage').textContent =
       encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
     placeBird('speechBird', 36, 'thinking');
-    placeKenshin('speechKenshin', 30, 'thinking');
+    placeKenshin('speechKenshin', 60, 'thinking');
   }
   save();
   recordStamp();
@@ -1967,7 +1967,7 @@ function showResults() {
   else { title = 'けんしんくん つぎもがんばろう！'; resultMood = 'thinking'; }
   document.getElementById('resultTitle').textContent = title;
   placeBird('resultBird', 70, resultMood);
-  placeKenshin('resultKenshin', 70, resultMood);
+  placeKenshin('resultKenshin', 140, resultMood);
 
   const hasIncorrect = state.sessionResults.some(r => !r.correct);
   document.getElementById('retryIncorrectBtn').style.display = hasIncorrect ? 'block' : 'none';
@@ -2632,7 +2632,7 @@ function loadSentence() {
   document.getElementById('sentenceBirdMessage').textContent =
     messages[Math.floor(Math.random() * messages.length)];
   placeBird('sentenceBird', 36, 'normal');
-  placeKenshin('sentenceKenshin', 30, 'normal');
+  placeKenshin('sentenceKenshin', 60, 'normal');
 
   clearSentenceCanvas();
 }
@@ -2643,7 +2643,7 @@ function submitSentenceAnswer() {
     document.getElementById('sentenceBirdMessage').textContent =
       'けんしんくん、まだなにも書いてないよ！漢字をかいてみて！';
     placeBird('sentenceBird', 36, 'thinking');
-    placeKenshin('sentenceKenshin', 30, 'thinking');
+    placeKenshin('sentenceKenshin', 60, 'thinking');
     return;
   }
 
@@ -2676,7 +2676,7 @@ function submitSentenceAnswer() {
     document.getElementById('sentenceBirdMessage').textContent =
       praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
     placeBird('sentenceBird', 36, 'cheer');
-    placeKenshin('sentenceKenshin', 30, 'cheer');
+    placeKenshin('sentenceKenshin', 60, 'cheer');
   } else {
     state.incorrect[item.k] = true;
     const encourageMessages = [
@@ -2687,7 +2687,7 @@ function submitSentenceAnswer() {
     document.getElementById('sentenceBirdMessage').textContent =
       encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
     placeBird('sentenceBird', 36, 'thinking');
-    placeKenshin('sentenceKenshin', 30, 'thinking');
+    placeKenshin('sentenceKenshin', 60, 'thinking');
   }
   save();
   recordStamp();
@@ -2733,7 +2733,7 @@ function showSentenceResults() {
   else { title = 'つぎもがんばろう！'; resultMood = 'thinking'; }
   document.getElementById('resultTitle').textContent = title;
   placeBird('resultBird', 70, resultMood);
-  placeKenshin('resultKenshin', 70, resultMood);
+  placeKenshin('resultKenshin', 140, resultMood);
 
   const hasIncorrect = sentenceTestResults.some(r => !r.correct);
   document.getElementById('retryIncorrectBtn').style.display = hasIncorrect ? 'block' : 'none';
@@ -2818,9 +2818,9 @@ document.addEventListener('DOMContentLoaded', () => {
   placeBird('resultBird', 70, 'happy');
   // Place Kenshin-kun
   placeKenshin('titleKenshin', 200, 'cheer');
-  placeKenshin('gradeKenshin', 56, 'happy');
-  placeKenshin('speechKenshin', 30, 'normal');
-  placeKenshin('resultKenshin', 70, 'happy');
+  placeKenshin('gradeKenshin', 112, 'happy');
+  placeKenshin('speechKenshin', 60, 'normal');
+  placeKenshin('resultKenshin', 140, 'happy');
   // Background birds
   initBackgroundBirds();
   initSentenceBgBirds();
