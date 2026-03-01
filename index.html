@@ -1851,6 +1851,8 @@ async function fetchStrokeData(kanji) {
 }
 
 // ストローク開始時に書き順をチェック
+let lastBatsuTime = 0; // バツ演出のクールダウン用
+
 function checkStrokeOrder(canvasX, canvasY, canvas) {
   if (expectedStrokes.length === 0) return true; // データなしはスキップ
 
@@ -1864,7 +1866,7 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   // 余分な画もエラー（画数オーバー）
   if (currentStrokeIndex >= expectedStrokes.length) {
     strokeOrderErrors++;
-    showStrokeOrderError();
+    maybeShowStrokeOrderError();
     return false;
   }
 
@@ -1876,10 +1878,20 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   // 許容範囲: 0.15（全体の15%以内ならOK）
   if (distance > 0.15) {
     strokeOrderErrors++;
-    showStrokeOrderError();
+    maybeShowStrokeOrderError();
     return false;
   }
   return true;
+}
+
+// バツ演出（2秒以上間隔を空ける）
+function maybeShowStrokeOrderError() {
+  const now = Date.now();
+  if (now - lastBatsuTime < 2000) return; // 2秒以内はスキップ
+  lastBatsuTime = now;
+
+  // 少し待ってから表示（書いてる途中に邪魔しない）
+  setTimeout(() => showStrokeOrderError(), 400);
 }
 
 // 書き順エラー時のバツ演出
@@ -1891,12 +1903,12 @@ function showStrokeOrderError() {
     const g = ac.createGain();
     o.type = 'square';
     o.frequency.value = 200;
-    g.gain.setValueAtTime(0.2, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.4);
+    g.gain.setValueAtTime(0.15, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.3);
     o.connect(g);
     g.connect(ac.destination);
     o.start(ac.currentTime);
-    o.stop(ac.currentTime + 0.4);
+    o.stop(ac.currentTime + 0.3);
   } catch(e) {}
 
   // ✗ エフェクト
@@ -1923,7 +1935,7 @@ function showStrokeOrderError() {
   msg.textContent = hints[Math.floor(Math.random() * hints.length)];
   document.body.appendChild(msg);
 
-  setTimeout(() => { batsu.remove(); msg.remove(); }, 1200);
+  setTimeout(() => { batsu.remove(); msg.remove(); }, 1500);
 }
 
 function gradeKanji() {
@@ -2275,6 +2287,7 @@ function clearCanvas() {
   strokeCount = 0;
   strokeOrderErrors = 0;
   strokeStartPositions = [];
+  lastBatsuTime = 0;
 }
 
 // ===== STAMPS =====
@@ -2836,6 +2849,7 @@ function clearSentenceCanvas() {
   sentenceStrokeCount = 0;
   strokeOrderErrors = 0;
   strokeStartPositions = [];
+  lastBatsuTime = 0;
 }
 
 // 文章テスト画面にも背景に鳥を飛ばす
