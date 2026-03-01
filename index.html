@@ -508,7 +508,7 @@
 
 <!-- ===== TITLE SCREEN ===== -->
 <div id="titleScreen" class="screen active">
-  <div style="display:flex;align-items:flex-end;gap:8px;">
+  <div style="display:flex;align-items:flex-end;gap:10px;">
     <div class="title-bird" id="titleBird"></div>
     <div class="title-bird" id="titleKenshin" style="animation-delay:-0.5s;"></div>
     <div class="title-bird" id="titleShinkai" style="animation-delay:-1s;"></div>
@@ -941,7 +941,7 @@ function placeKenshin(elementId, size, mood) {
 
 function placeShinkai(elementId, size) {
   const el = document.getElementById(elementId);
-  if (el) el.innerHTML = `<img src="img/kenshin.png" alt="しんかい" style="width:${size}px;height:auto;object-fit:contain;filter:hue-rotate(190deg) saturate(1.3);">`;
+  if (el) el.innerHTML = `<img src="img/shinkai.png" alt="しんかい" style="width:${size}px;height:auto;object-fit:contain;">`;
 }
 
 // ===== BACKGROUND BIRD SPECIES =====
@@ -2912,7 +2912,7 @@ document.addEventListener('DOMContentLoaded', () => {
   placeBird('resultBird', 70, 'happy');
   // Place Kenshin-kun & Shinkai-kun
   placeKenshin('titleKenshin', 200, 'cheer');
-  placeShinkai('titleShinkai', 160);
+  placeShinkai('titleShinkai', 200);
   placeKenshin('gradeKenshin', 112, 'happy');
   placeKenshin('speechKenshin', 60, 'normal');
   placeKenshin('resultKenshin', 140, 'happy');
