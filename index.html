@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="img/bird-sekisei.png">
+<link rel="icon" type="image/png" href="img/bird-sekisei.png">
 <title>けんしんかんぺき漢字ドリル</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
@@ -197,7 +199,7 @@
     display: flex; align-items: flex-start; gap: 8px;
     background: var(--card-bg); padding: 8px 12px; border-radius: var(--radius-sm);
     box-shadow: var(--shadow); width: 100%; max-width: 500px;
-    min-height: 40px; position: relative; flex-shrink: 0;
+    min-height: 40px; position: relative; flex-shrink: 0; z-index: 1;
   }
   .bird-icon { flex-shrink: 0; animation: birdBounce 3s ease-in-out infinite; line-height: 0; }
   .bird-text { font-size: 13px; font-weight: 500; line-height: 1.5; flex: 1; padding-top: 2px; }
@@ -260,7 +262,7 @@
     overflow: hidden; justify-content: space-between;
     position: fixed; inset: 0; z-index: 2; background: var(--bg);
   }
-  .sentence-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; }
+  .sentence-top { display: flex; align-items: center; width: 100%; max-width: 500px; gap: 12px; position: relative; z-index: 1; }
   .sentence-info { flex: 1; }
   .sentence-info .sentence-label { font-size: 13px; color: var(--secondary); font-weight: 700; }
   .sentence-progress-text { font-size: 12px; color: var(--mid-gray); text-align: right; }
@@ -268,6 +270,7 @@
   .sentence-card {
     background: var(--card-bg); border-radius: var(--radius); padding: 24px 20px;
     box-shadow: var(--shadow); width: 100%; max-width: 500px; text-align: center;
+    position: relative; z-index: 1;
   }
   .sentence-text {
     font-size: 22px; font-weight: 700; line-height: 2; letter-spacing: 2px;
@@ -293,7 +296,7 @@
 
   .sentence-canvas-area {
     display: flex; align-items: center; gap: 16px; width: 100%; max-width: 500px;
-    justify-content: center;
+    justify-content: center; position: relative; z-index: 1;
   }
   .sentence-canvas-wrapper {
     position: relative; width: min(200px, 50vw); height: min(200px, 50vw);
@@ -327,7 +330,7 @@
 
   .sentence-buttons {
     display: flex; gap: 8px; width: 100%; max-width: 500px; flex-wrap: wrap;
-    justify-content: center;
+    justify-content: center; position: relative; z-index: 1;
   }
   .sentence-buttons .btn { flex: 1; min-width: 100px; }
 
@@ -383,13 +386,10 @@
   .star-container {
     position: fixed; inset: 0; pointer-events: none; z-index: 9999;
   }
-  .star {
-    position: absolute; font-size: 24px; animation: starFall 1.2s ease-out forwards;
-  }
-  @keyframes starFall {
-    0% { opacity: 1; transform: scale(0) rotate(0deg); }
-    50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
-    100% { opacity: 0; transform: scale(0.5) rotate(360deg) translateY(120px); }
+  .star-burst {
+    position: fixed; left: 50%; top: 50%;
+    margin: -0.5em 0 0 -0.5em;
+    pointer-events: none; z-index: 10000;
   }
 
   /* Big circle (maru) effect */
@@ -486,6 +486,9 @@
     100% { transform: scaleY(0.95); }
   }
 
+  .sentence-bg-birds {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
   .screen { position: relative; z-index: 1; }
 
   /* ===== RESPONSIVE ===== */
@@ -645,6 +648,7 @@
 
 <!-- ===== SENTENCE TEST SCREEN ===== -->
 <div id="sentenceScreen" class="screen">
+  <div class="bg-birds sentence-bg-birds" id="sentenceBgBirds"></div>
   <div class="sentence-top">
     <button class="back-btn" onclick="exitSentenceTest()">←</button>
     <div class="sentence-info">
@@ -2021,7 +2025,7 @@ function showStarEffect() {
   // 1. ピンポン音
   playPinpon();
 
-  // 2. ◯ エフェクト
+  // 2. ◯ エフェクト（中央固定）
   const maru = document.createElement('div');
   maru.className = 'maru-effect';
   document.body.appendChild(maru);
@@ -2035,18 +2039,35 @@ function showStarEffect() {
   document.body.appendChild(sugoi);
   setTimeout(() => sugoi.remove(), 1500);
 
-  // 4. 星エフェクト（たくさん！）
-  const container = document.getElementById('starContainer');
-  const stars = ['⭐', '🌟', '✨', '💫', '🎉', '🎊', '💯'];
-  for (let i = 0; i < 30; i++) {
+  // 4. 星エフェクト — 中央から外側の円弧に向かって飛ぶ！
+  const starEmojis = ['⭐', '🌟', '✨', '💫', '🎉', '🎊', '💯'];
+  const count = 30;
+  for (let i = 0; i < count; i++) {
     const star = document.createElement('div');
-    star.className = 'star';
-    star.textContent = stars[Math.floor(Math.random() * stars.length)];
-    star.style.left = `${Math.random() * 100}%`;
-    star.style.top = `${10 + Math.random() * 70}%`;
+    star.className = 'star-burst';
+    star.textContent = starEmojis[Math.floor(Math.random() * starEmojis.length)];
     star.style.fontSize = `${20 + Math.random() * 32}px`;
-    star.style.animationDelay = `${Math.random() * 0.6}s`;
-    container.appendChild(star);
+    document.body.appendChild(star);
+
+    // 放射状に均等角度＋ランダムずらし
+    const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+    const distance = 120 + Math.random() * 200;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    const delay = Math.random() * 250;
+    const duration = 900 + Math.random() * 400;
+
+    star.animate([
+      { transform: 'scale(0) rotate(0deg)', opacity: 1 },
+      { transform: 'scale(1.5) rotate(60deg)', opacity: 1, offset: 0.18 },
+      { transform: `translate(${tx}px, ${ty}px) scale(0.3) rotate(360deg)`, opacity: 0 }
+    ], {
+      duration: duration,
+      easing: 'ease-out',
+      fill: 'forwards',
+      delay: delay
+    });
+
     setTimeout(() => star.remove(), 2000);
   }
 }
@@ -2743,12 +2764,55 @@ function clearSentenceCanvas() {
   sentenceStrokeCount = 0;
 }
 
+// 文章テスト画面にも背景に鳥を飛ばす
+function initSentenceBgBirds() {
+  const container = document.getElementById('sentenceBgBirds');
+  if (!container) return;
+
+  const birdImages = [
+    'img/bird-suzume.png', 'img/bird-sekisei.png', 'img/bird-sekirei.png',
+    'img/bird-kawasemi.png', 'img/bird-washi.png', 'img/bird-inko-green.png',
+  ];
+
+  const configs = [
+    { img: 1, size: 38, top: '6%',  dir: 'right', dur: '20s', delay: '0s',  drift: '-15px', opacity: 0.22 },
+    { img: 3, size: 44, top: '20%', dir: 'left',  dur: '26s', delay: '5s',  drift: '12px',  opacity: 0.18 },
+    { img: 0, size: 32, top: '45%', dir: 'right', dur: '18s', delay: '10s', drift: '-20px', opacity: 0.20 },
+    { img: 4, size: 50, top: '15%', dir: 'left',  dur: '30s', delay: '3s',  drift: '8px',   opacity: 0.15 },
+    { img: 2, size: 36, top: '60%', dir: 'right', dur: '22s', delay: '8s',  drift: '-18px', opacity: 0.20 },
+    { img: 5, size: 40, top: '35%', dir: 'left',  dur: '24s', delay: '12s', drift: '15px',  opacity: 0.18 },
+    { img: 3, size: 30, top: '75%', dir: 'right', dur: '16s', delay: '15s', drift: '-12px', opacity: 0.22 },
+    { img: 1, size: 34, top: '85%', dir: 'left',  dur: '28s', delay: '7s',  drift: '10px',  opacity: 0.16 },
+  ];
+
+  configs.forEach(c => {
+    const div = document.createElement('div');
+    div.className = `bg-bird fly-${c.dir}`;
+    div.style.top = c.top;
+    div.style.setProperty('--fly-duration', c.dur);
+    div.style.setProperty('--fly-delay', c.delay);
+    div.style.setProperty('--fly-drift', c.drift);
+    div.style.setProperty('--bird-opacity', c.opacity);
+    div.innerHTML = `<img src="${birdImages[c.img]}" style="width:${c.size}px;height:auto;" alt="">`;
+    container.appendChild(div);
+  });
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   initCanvas();
   initSentenceCanvas();
-  // Place 3D birds
-  placeBird('titleBird', 100, 'happy');
+
+  // タイトル画面の鳥を毎回ランダムで変更
+  const allBirdImages = [
+    'img/bird-suzume.png', 'img/bird-sekisei.png', 'img/bird-sekirei.png',
+    'img/bird-kawasemi.png', 'img/bird-washi.png', 'img/bird-inko-green.png',
+  ];
+  const randomBirdImg = allBirdImages[Math.floor(Math.random() * allBirdImages.length)];
+  const titleBirdEl = document.getElementById('titleBird');
+  if (titleBirdEl) titleBirdEl.innerHTML = `<img src="${randomBirdImg}" alt="とり" style="width:100px;height:auto;object-fit:contain;">`;
+
+  // Other birds
   placeBird('gradeBird', 56, 'cheer');
   placeBird('speechBird', 36, 'normal');
   placeBird('resultBird', 70, 'happy');
@@ -2759,6 +2823,7 @@ document.addEventListener('DOMContentLoaded', () => {
   placeKenshin('resultKenshin', 70, 'happy');
   // Background birds
   initBackgroundBirds();
+  initSentenceBgBirds();
 });
 </script>
 </body>
