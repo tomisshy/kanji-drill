@@ -1861,15 +1861,20 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const currentStrokeIndex = strokeStartPositions.length; // 0-indexed
   strokeStartPositions.push({x: normX, y: normY});
 
-  if (currentStrokeIndex >= expectedStrokes.length) return true; // 余分な画はOK
+  // 余分な画もエラー（画数オーバー）
+  if (currentStrokeIndex >= expectedStrokes.length) {
+    strokeOrderErrors++;
+    showStrokeOrderError();
+    return false;
+  }
 
   const expected = expectedStrokes[currentStrokeIndex];
   const dx = normX - expected.x;
   const dy = normY - expected.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // 許容範囲: 0.25（全体の25%以内ならOK）— 子供向けなので緩め
-  if (distance > 0.25) {
+  // 許容範囲: 0.15（全体の15%以内ならOK）
+  if (distance > 0.15) {
     strokeOrderErrors++;
     showStrokeOrderError();
     return false;
@@ -1936,13 +1941,10 @@ function gradeKanji() {
   // 書き順エラーがあったらバツ
   if (strokeOrderErrors > 0) return false;
 
-  // 画数チェック：KanjiVGデータがある場合、画数がずれていたらバツ
-  // （許容範囲: 期待画数の±1画、ただし画数が多い漢字(8画以上)は±2）
+  // 画数チェック：画数は完全一致のみ正解
   if (expectedStrokes.length > 0) {
-    const expectedCount = expectedStrokes.length;
-    const tolerance = expectedCount >= 8 ? 2 : 1;
-    if (Math.abs(strokeCount - expectedCount) > tolerance) {
-      return false; // 画数が違う = 違う字の可能性
+    if (strokeCount !== expectedStrokes.length) {
+      return false; // 画数が違う = 不正解
     }
   }
 
@@ -2705,11 +2707,9 @@ function gradeSentenceKanji() {
   // 書き順エラーがあったらバツ
   if (strokeOrderErrors > 0) return false;
 
-  // 画数チェック（KanjiVGデータがあれば）
+  // 画数チェック：画数は完全一致のみ正解
   if (expectedStrokes.length > 0) {
-    const expectedCount = expectedStrokes.length;
-    const tolerance = expectedCount <= 3 ? 1 : 2;
-    if (Math.abs(sentenceStrokeCount - expectedCount) > tolerance) {
+    if (sentenceStrokeCount !== expectedStrokes.length) {
       return false;
     }
   }
