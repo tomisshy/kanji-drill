@@ -1869,11 +1869,13 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const currentStrokeIndex = strokeStartPositions.length; // 0-indexed
   strokeStartPositions.push({x: normX, y: normY});
 
-  // 余分な画もエラー（画数オーバー）
+  // 余分な画は2画までは許容（ペン離しミス対応）
   if (currentStrokeIndex >= expectedStrokes.length) {
-    strokeOrderErrors++;
-    maybeShowStrokeOrderError();
-    return false;
+    if (currentStrokeIndex >= expectedStrokes.length + 2) {
+      strokeOrderErrors++;
+      maybeShowStrokeOrderError();
+    }
+    return true; // 書き順チェックはスキップ
   }
 
   const expected = expectedStrokes[currentStrokeIndex];
@@ -1881,8 +1883,8 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const dy = normY - expected.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // 許容範囲: 0.22（全体の22%以内ならOK — 子供の字のブレに対応）
-  if (distance > 0.22) {
+  // 許容範囲: 0.28（全体の28%以内ならOK — 子供の汚い字にも対応）
+  if (distance > 0.28) {
     strokeOrderErrors++;
     maybeShowStrokeOrderError();
     return false;
@@ -1960,10 +1962,10 @@ function gradeKanji() {
   // 書き順エラーがあったらバツ
   if (strokeOrderErrors > 0) return false;
 
-  // 画数チェック：画数は完全一致のみ正解
+  // 画数チェック：±2画まで許容（ペン離しミス・子供の書き方に対応）
   if (expectedStrokes.length > 0) {
-    if (strokeCount !== expectedStrokes.length) {
-      return false; // 画数が違う = 不正解
+    if (Math.abs(strokeCount - expectedStrokes.length) > 2) {
+      return false; // 画数が違いすぎる = 違う字
     }
   }
 
@@ -2727,9 +2729,9 @@ function gradeSentenceKanji() {
   // 書き順エラーがあったらバツ
   if (strokeOrderErrors > 0) return false;
 
-  // 画数チェック：画数は完全一致のみ正解
+  // 画数チェック：±2画まで許容（ペン離しミス・子供の書き方に対応）
   if (expectedStrokes.length > 0) {
-    if (sentenceStrokeCount !== expectedStrokes.length) {
+    if (Math.abs(sentenceStrokeCount - expectedStrokes.length) > 2) {
       return false;
     }
   }
