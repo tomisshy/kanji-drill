@@ -91,14 +91,14 @@
   .grade-header { text-align: center; margin-bottom: 32px; }
   .grade-header h2 { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
   .grade-header p { color: var(--mid-gray); font-size: 14px; }
-  .grade-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 480px; }
+  .grade-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; width: 100%; max-width: 520px; }
   .grade-card {
-    background: var(--card-bg); border-radius: var(--radius); padding: 24px;
+    background: var(--card-bg); border-radius: var(--radius); padding: 16px 12px;
     box-shadow: var(--shadow); text-align: center; cursor: pointer;
     transition: all 0.2s; border: 2px solid transparent;
   }
   .grade-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-  .grade-card .grade-num { font-size: 48px; font-weight: 900; color: var(--primary); }
+  .grade-card .grade-num { font-size: 36px; font-weight: 900; color: var(--primary); }
   .grade-card .grade-label { font-size: 14px; color: var(--mid-gray); margin-top: 4px; }
   .grade-card .grade-count { font-size: 12px; color: var(--secondary); margin-top: 8px; font-weight: 600; }
   .grade-card .grade-pct { font-size: 22px; font-weight: 900; color: var(--tertiary); margin-top: 8px; }
@@ -514,7 +514,7 @@
     <div class="title-bird" id="titleShinkai" style="animation-delay:-1s;"></div>
   </div>
   <h1 class="title-main">けんしんとしんかいの<br>かんぺき漢字ドリル</h1>
-  <p class="title-sub">小学1・2年生 全240字</p>
+  <p class="title-sub">小学1・2・3年生 全440字</p>
   <div class="title-buttons">
     <button class="btn btn-primary" onclick="showScreen('gradeScreen')">れんしゅうする</button>
     <button class="btn btn-secondary" onclick="showScreen('stampScreen')">スタンプちょう</button>
@@ -528,12 +528,14 @@
     <div style="margin-bottom:8px;display:flex;align-items:flex-end;justify-content:center;gap:6px;">
       <div id="gradeBird"></div>
       <div id="gradeKenshin"></div>
+      <div id="gradeShinkai"></div>
     </div>
-    <h2>けんしんくん、どの学年にする？</h2>
+    <h2>どの学年にする？</h2>
     <p>きょうもがんばろう！</p>
   </div>
-  <div class="grade-cards">
+  <div class="grade-cards" style="grid-template-columns:1fr 1fr 1fr;">
     <div class="grade-card" onclick="selectGrade(1)">
+      <div id="gradeChar1" style="margin:0 auto 4px;"></div>
       <div class="grade-num">1</div>
       <div class="grade-label">ねんせい</div>
       <div class="grade-pct" id="grade1pct">0%</div>
@@ -541,11 +543,20 @@
       <div class="grade-progress"><div class="grade-progress-fill" id="grade1progress" style="width:0%"></div></div>
     </div>
     <div class="grade-card" onclick="selectGrade(2)">
+      <div id="gradeChar2" style="margin:0 auto 4px;"></div>
       <div class="grade-num">2</div>
       <div class="grade-label">ねんせい</div>
       <div class="grade-pct" id="grade2pct">0%</div>
       <div class="grade-count" id="grade2count">0 / 160 字</div>
       <div class="grade-progress"><div class="grade-progress-fill" id="grade2progress" style="width:0%"></div></div>
+    </div>
+    <div class="grade-card" onclick="selectGrade(3)">
+      <div id="gradeChar3" style="margin:0 auto 4px;"></div>
+      <div class="grade-num">3</div>
+      <div class="grade-label">ねんせい</div>
+      <div class="grade-pct" id="grade3pct">0%</div>
+      <div class="grade-count" id="grade3count">0 / 200 字</div>
+      <div class="grade-progress"><div class="grade-progress-fill" id="grade3progress" style="width:0%"></div></div>
     </div>
   </div>
   <button class="btn btn-outline" style="margin-top:24px;" onclick="showScreen('titleScreen')">もどる</button>
@@ -944,6 +955,47 @@ function placeShinkai(elementId, size) {
   if (el) el.innerHTML = `<img src="img/shinkai.png" alt="しんかい" style="width:${size}px;height:auto;object-fit:contain;">`;
 }
 
+// 学年に応じたキャラクター配置
+// 1年生=しんかい, 2年生=鳥, 3年生=けんしん
+function placeGradeCharacters(area, mood) {
+  mood = mood || 'normal';
+  const g = state.currentGrade;
+  if (area === 'speech') {
+    if (g === 1) {
+      placeShinkai('speechBird', 56);
+      placeShinkai('speechKenshin', 36);
+    } else if (g === 2) {
+      placeBird('speechBird', 56, mood);
+      placeBird('speechKenshin', 36, mood);
+    } else {
+      placeKenshin('speechBird', 56, mood);
+      placeKenshin('speechKenshin', 36, mood);
+    }
+  } else if (area === 'sentence') {
+    if (g === 1) {
+      placeShinkai('sentenceBird', 56);
+      placeShinkai('sentenceKenshin', 36);
+    } else if (g === 2) {
+      placeBird('sentenceBird', 56, mood);
+      placeBird('sentenceKenshin', 36, mood);
+    } else {
+      placeKenshin('sentenceBird', 56, mood);
+      placeKenshin('sentenceKenshin', 36, mood);
+    }
+  } else if (area === 'result') {
+    if (g === 1) {
+      placeShinkai('resultBird', 70);
+      placeShinkai('resultKenshin', 140);
+    } else if (g === 2) {
+      placeBird('resultBird', 70, mood);
+      placeBird('resultKenshin', 140, mood);
+    } else {
+      placeKenshin('resultBird', 70, mood);
+      placeKenshin('resultKenshin', 140, mood);
+    }
+  }
+}
+
 // ===== BACKGROUND BIRD SPECIES =====
 function createSpeciesSVG(species, size) {
   const s = size || 40;
@@ -1331,6 +1383,203 @@ const GRADE2_CLEAN = GRADE2.filter(item => {
   return true;
 });
 
+const GRADE3 = [
+  {k:'丁',on:'チョウ・テイ',kun:'',m:'counter/block'},
+  {k:'世',on:'セイ・セ',kun:'よ',m:'world/generation'},
+  {k:'両',on:'リョウ',kun:'',m:'both'},
+  {k:'主',on:'シュ',kun:'ぬし・おも',m:'master/main'},
+  {k:'乗',on:'ジョウ',kun:'の(る)',m:'ride'},
+  {k:'予',on:'ヨ',kun:'',m:'beforehand'},
+  {k:'事',on:'ジ',kun:'こと',m:'thing/matter'},
+  {k:'仕',on:'シ',kun:'つか(える)',m:'serve'},
+  {k:'他',on:'タ',kun:'ほか',m:'other'},
+  {k:'代',on:'ダイ・タイ',kun:'か(わる)',m:'substitute/age'},
+  {k:'住',on:'ジュウ',kun:'す(む)',m:'dwell'},
+  {k:'使',on:'シ',kun:'つか(う)',m:'use'},
+  {k:'係',on:'ケイ',kun:'かかり',m:'person in charge'},
+  {k:'倍',on:'バイ',kun:'',m:'double'},
+  {k:'全',on:'ゼン',kun:'まった(く)',m:'all/whole'},
+  {k:'具',on:'グ',kun:'',m:'tool'},
+  {k:'写',on:'シャ',kun:'うつ(す)',m:'copy/photograph'},
+  {k:'列',on:'レツ',kun:'',m:'row/line'},
+  {k:'助',on:'ジョ',kun:'たす(ける)',m:'help'},
+  {k:'動',on:'ドウ',kun:'うご(く)',m:'move'},
+  {k:'勝',on:'ショウ',kun:'か(つ)',m:'win'},
+  {k:'化',on:'カ・ケ',kun:'ば(ける)',m:'change'},
+  {k:'区',on:'ク',kun:'',m:'ward/district'},
+  {k:'医',on:'イ',kun:'',m:'medicine/doctor'},
+  {k:'去',on:'キョ・コ',kun:'さ(る)',m:'leave/past'},
+  {k:'反',on:'ハン',kun:'そ(る)',m:'anti/opposite'},
+  {k:'取',on:'シュ',kun:'と(る)',m:'take'},
+  {k:'受',on:'ジュ',kun:'う(ける)',m:'receive'},
+  {k:'号',on:'ゴウ',kun:'',m:'number/issue'},
+  {k:'向',on:'コウ',kun:'む(く)',m:'face/turn toward'},
+  {k:'君',on:'クン',kun:'きみ',m:'you/lord'},
+  {k:'味',on:'ミ',kun:'あじ',m:'taste'},
+  {k:'命',on:'メイ・ミョウ',kun:'いのち',m:'life'},
+  {k:'和',on:'ワ',kun:'やわ(らぐ)',m:'harmony/Japanese'},
+  {k:'品',on:'ヒン',kun:'しな',m:'goods/quality'},
+  {k:'員',on:'イン',kun:'',m:'member'},
+  {k:'商',on:'ショウ',kun:'あきな(う)',m:'commerce'},
+  {k:'問',on:'モン',kun:'と(う)',m:'question'},
+  {k:'坂',on:'ハン',kun:'さか',m:'slope'},
+  {k:'央',on:'オウ',kun:'',m:'center'},
+  {k:'始',on:'シ',kun:'はじ(める)',m:'begin'},
+  {k:'委',on:'イ',kun:'',m:'committee'},
+  {k:'守',on:'シュ',kun:'まも(る)',m:'protect'},
+  {k:'安',on:'アン',kun:'やす(い)',m:'cheap/safe'},
+  {k:'定',on:'テイ・ジョウ',kun:'さだ(める)',m:'fix/decide'},
+  {k:'実',on:'ジツ',kun:'み・みの(る)',m:'fruit/truth'},
+  {k:'客',on:'キャク・カク',kun:'',m:'guest'},
+  {k:'宮',on:'キュウ・グウ',kun:'みや',m:'palace/shrine'},
+  {k:'宿',on:'シュク',kun:'やど',m:'inn/lodging'},
+  {k:'寒',on:'カン',kun:'さむ(い)',m:'cold'},
+  {k:'対',on:'タイ・ツイ',kun:'',m:'opposite/versus'},
+  {k:'届',on:'',kun:'とど(ける)',m:'deliver'},
+  {k:'屋',on:'オク',kun:'や',m:'shop/roof'},
+  {k:'岸',on:'ガン',kun:'きし',m:'shore'},
+  {k:'島',on:'トウ',kun:'しま',m:'island'},
+  {k:'州',on:'シュウ',kun:'す',m:'state/province'},
+  {k:'帳',on:'チョウ',kun:'',m:'notebook'},
+  {k:'平',on:'ヘイ・ビョウ',kun:'たい(ら)',m:'flat/peace'},
+  {k:'幸',on:'コウ',kun:'しあわ(せ)',m:'happiness'},
+  {k:'度',on:'ド',kun:'たび',m:'degree/time'},
+  {k:'庫',on:'コ',kun:'',m:'storehouse'},
+  {k:'庭',on:'テイ',kun:'にわ',m:'garden'},
+  {k:'式',on:'シキ',kun:'',m:'ceremony/formula'},
+  {k:'役',on:'ヤク・エキ',kun:'',m:'role/duty'},
+  {k:'待',on:'タイ',kun:'ま(つ)',m:'wait'},
+  {k:'急',on:'キュウ',kun:'いそ(ぐ)',m:'hurry'},
+  {k:'息',on:'ソク',kun:'いき',m:'breath/son'},
+  {k:'悪',on:'アク・オ',kun:'わる(い)',m:'bad/evil'},
+  {k:'悲',on:'ヒ',kun:'かな(しい)',m:'sad'},
+  {k:'想',on:'ソウ',kun:'',m:'concept/thought'},
+  {k:'意',on:'イ',kun:'',m:'meaning/mind'},
+  {k:'感',on:'カン',kun:'',m:'feeling'},
+  {k:'所',on:'ショ',kun:'ところ',m:'place'},
+  {k:'打',on:'ダ',kun:'う(つ)',m:'hit/strike'},
+  {k:'投',on:'トウ',kun:'な(げる)',m:'throw'},
+  {k:'拾',on:'シュウ',kun:'ひろ(う)',m:'pick up'},
+  {k:'持',on:'ジ',kun:'も(つ)',m:'hold/have'},
+  {k:'指',on:'シ',kun:'ゆび・さ(す)',m:'finger/point'},
+  {k:'放',on:'ホウ',kun:'はな(す)',m:'release'},
+  {k:'整',on:'セイ',kun:'ととの(える)',m:'arrange'},
+  {k:'旅',on:'リョ',kun:'たび',m:'travel'},
+  {k:'族',on:'ゾク',kun:'',m:'tribe/family'},
+  {k:'昔',on:'セキ・シャク',kun:'むかし',m:'long ago'},
+  {k:'暑',on:'ショ',kun:'あつ(い)',m:'hot'},
+  {k:'暗',on:'アン',kun:'くら(い)',m:'dark'},
+  {k:'曲',on:'キョク',kun:'ま(がる)',m:'bend/music'},
+  {k:'有',on:'ユウ・ウ',kun:'あ(る)',m:'have/exist'},
+  {k:'服',on:'フク',kun:'',m:'clothes'},
+  {k:'期',on:'キ・ゴ',kun:'',m:'period'},
+  {k:'板',on:'ハン・バン',kun:'いた',m:'board/plank'},
+  {k:'柱',on:'チュウ',kun:'はしら',m:'pillar'},
+  {k:'根',on:'コン',kun:'ね',m:'root'},
+  {k:'植',on:'ショク',kun:'う(える)',m:'plant'},
+  {k:'業',on:'ギョウ・ゴウ',kun:'わざ',m:'business/work'},
+  {k:'様',on:'ヨウ',kun:'さま',m:'manner/Mr./Ms.'},
+  {k:'横',on:'オウ',kun:'よこ',m:'side/horizontal'},
+  {k:'橋',on:'キョウ',kun:'はし',m:'bridge'},
+  {k:'次',on:'ジ',kun:'つぎ・つ(ぐ)',m:'next'},
+  {k:'歯',on:'シ',kun:'は',m:'tooth'},
+  {k:'死',on:'シ',kun:'し(ぬ)',m:'death'},
+  {k:'氷',on:'ヒョウ',kun:'こおり',m:'ice'},
+  {k:'決',on:'ケツ',kun:'き(める)',m:'decide'},
+  {k:'油',on:'ユ',kun:'あぶら',m:'oil'},
+  {k:'波',on:'ハ',kun:'なみ',m:'wave'},
+  {k:'注',on:'チュウ',kun:'そそ(ぐ)',m:'pour/note'},
+  {k:'泳',on:'エイ',kun:'およ(ぐ)',m:'swim'},
+  {k:'洋',on:'ヨウ',kun:'',m:'ocean/Western'},
+  {k:'流',on:'リュウ',kun:'なが(れる)',m:'flow'},
+  {k:'消',on:'ショウ',kun:'き(える)',m:'extinguish'},
+  {k:'深',on:'シン',kun:'ふか(い)',m:'deep'},
+  {k:'温',on:'オン',kun:'あたた(かい)',m:'warm'},
+  {k:'湖',on:'コ',kun:'みずうみ',m:'lake'},
+  {k:'港',on:'コウ',kun:'みなと',m:'harbor'},
+  {k:'湯',on:'トウ',kun:'ゆ',m:'hot water'},
+  {k:'漢',on:'カン',kun:'',m:'China/kanji'},
+  {k:'炭',on:'タン',kun:'すみ',m:'charcoal'},
+  {k:'物',on:'ブツ・モツ',kun:'もの',m:'thing'},
+  {k:'球',on:'キュウ',kun:'たま',m:'ball/sphere'},
+  {k:'由',on:'ユ・ユウ',kun:'よし',m:'reason/cause'},
+  {k:'申',on:'シン',kun:'もう(す)',m:'say/report'},
+  {k:'界',on:'カイ',kun:'',m:'world/boundary'},
+  {k:'畑',on:'',kun:'はたけ',m:'field/farm'},
+  {k:'病',on:'ビョウ',kun:'やまい・や(む)',m:'sick'},
+  {k:'発',on:'ハツ・ホツ',kun:'',m:'departure/emit'},
+  {k:'登',on:'トウ・ト',kun:'のぼ(る)',m:'climb'},
+  {k:'皮',on:'ヒ',kun:'かわ',m:'skin/leather'},
+  {k:'皿',on:'',kun:'さら',m:'plate/dish'},
+  {k:'相',on:'ソウ',kun:'あい',m:'mutual/phase'},
+  {k:'県',on:'ケン',kun:'',m:'prefecture'},
+  {k:'真',on:'シン',kun:'ま',m:'true/real'},
+  {k:'着',on:'チャク',kun:'き(る)・つ(く)',m:'wear/arrive'},
+  {k:'短',on:'タン',kun:'みじか(い)',m:'short'},
+  {k:'研',on:'ケン',kun:'と(ぐ)',m:'sharpen/study'},
+  {k:'礼',on:'レイ',kun:'',m:'courtesy/bow'},
+  {k:'神',on:'シン・ジン',kun:'かみ',m:'god'},
+  {k:'祭',on:'サイ',kun:'まつ(り)',m:'festival'},
+  {k:'福',on:'フク',kun:'',m:'fortune/blessing'},
+  {k:'秒',on:'ビョウ',kun:'',m:'second(time)'},
+  {k:'究',on:'キュウ',kun:'きわ(める)',m:'research'},
+  {k:'章',on:'ショウ',kun:'',m:'chapter/badge'},
+  {k:'童',on:'ドウ',kun:'わらべ',m:'child'},
+  {k:'筆',on:'ヒツ',kun:'ふで',m:'brush/writing'},
+  {k:'等',on:'トウ',kun:'ひと(しい)',m:'equal/class'},
+  {k:'箱',on:'',kun:'はこ',m:'box'},
+  {k:'級',on:'キュウ',kun:'',m:'class/rank'},
+  {k:'緑',on:'リョク・ロク',kun:'みどり',m:'green'},
+  {k:'練',on:'レン',kun:'ね(る)',m:'practice'},
+  {k:'美',on:'ビ',kun:'うつく(しい)',m:'beautiful'},
+  {k:'習',on:'シュウ',kun:'なら(う)',m:'learn'},
+  {k:'者',on:'シャ',kun:'もの',m:'person'},
+  {k:'育',on:'イク',kun:'そだ(てる)',m:'raise/grow'},
+  {k:'苦',on:'ク',kun:'くる(しい)・にが(い)',m:'suffering/bitter'},
+  {k:'荷',on:'カ',kun:'に',m:'baggage/load'},
+  {k:'落',on:'ラク',kun:'お(ちる)',m:'fall/drop'},
+  {k:'葉',on:'ヨウ',kun:'は',m:'leaf'},
+  {k:'薬',on:'ヤク',kun:'くすり',m:'medicine'},
+  {k:'血',on:'ケツ',kun:'ち',m:'blood'},
+  {k:'表',on:'ヒョウ',kun:'おもて・あらわ(す)',m:'surface/express'},
+  {k:'詩',on:'シ',kun:'',m:'poem'},
+  {k:'談',on:'ダン',kun:'',m:'talk/discuss'},
+  {k:'調',on:'チョウ',kun:'しら(べる)',m:'investigate/tune'},
+  {k:'豆',on:'トウ・ズ',kun:'まめ',m:'bean'},
+  {k:'負',on:'フ',kun:'ま(ける)',m:'lose/bear'},
+  {k:'起',on:'キ',kun:'お(きる)',m:'wake/rise'},
+  {k:'路',on:'ロ',kun:'じ',m:'road/path'},
+  {k:'身',on:'シン',kun:'み',m:'body'},
+  {k:'転',on:'テン',kun:'ころ(がる)',m:'roll/turn'},
+  {k:'軽',on:'ケイ',kun:'かる(い)',m:'light(weight)'},
+  {k:'農',on:'ノウ',kun:'',m:'agriculture'},
+  {k:'返',on:'ヘン',kun:'かえ(す)',m:'return'},
+  {k:'追',on:'ツイ',kun:'お(う)',m:'chase'},
+  {k:'送',on:'ソウ',kun:'おく(る)',m:'send'},
+  {k:'逆',on:'ギャク',kun:'さか(らう)',m:'reverse'},
+  {k:'通',on:'ツウ',kun:'とお(る)・かよ(う)',m:'pass through'},
+  {k:'速',on:'ソク',kun:'はや(い)',m:'fast/speed'},
+  {k:'進',on:'シン',kun:'すす(む)',m:'advance'},
+  {k:'遊',on:'ユウ',kun:'あそ(ぶ)',m:'play'},
+  {k:'運',on:'ウン',kun:'はこ(ぶ)',m:'carry/luck'},
+  {k:'部',on:'ブ',kun:'',m:'section/club'},
+  {k:'都',on:'ト・ツ',kun:'みやこ',m:'capital/metropolis'},
+  {k:'配',on:'ハイ',kun:'くば(る)',m:'distribute'},
+  {k:'酒',on:'シュ',kun:'さけ',m:'alcohol/sake'},
+  {k:'重',on:'ジュウ・チョウ',kun:'おも(い)',m:'heavy'},
+  {k:'鉄',on:'テツ',kun:'',m:'iron'},
+  {k:'銀',on:'ギン',kun:'',m:'silver'},
+  {k:'開',on:'カイ',kun:'ひら(く)・あ(ける)',m:'open'},
+  {k:'院',on:'イン',kun:'',m:'institution'},
+  {k:'階',on:'カイ',kun:'',m:'floor/story'},
+  {k:'集',on:'シュウ',kun:'あつ(める)',m:'gather'},
+  {k:'面',on:'メン',kun:'おも・おもて',m:'face/surface'},
+  {k:'題',on:'ダイ',kun:'',m:'topic/title'},
+  {k:'飲',on:'イン',kun:'の(む)',m:'drink'},
+  {k:'館',on:'カン',kun:'やかた',m:'building/hall'},
+  {k:'駅',on:'エキ',kun:'',m:'station'}
+];
+
 // ===== SENTENCE TEST DATA =====
 // 文章テスト: 各漢字に対して、読みがなをヒントにして漢字を書かせる問題
 // q = 問題文（ひらがな読みを【】で囲む）, r = 正解の漢字
@@ -1578,6 +1827,201 @@ const KANJI_SENTENCES = {
   '合': {q:'こたえが【あ】っていた。', r:'合'},
   '今': {q:'【いま】から出かけるよ。', r:'今'},
   '京': {q:'とう【きょう】にいってみたい。', r:'京'},
+  // ===== 3年生 =====
+  '丁': {q:'あの【ちょう】めは人がおおい。', r:'丁'},
+  '世': {q:'【せ】かいのことをしらべた。', r:'世'},
+  '両': {q:'【りょう】ほうの手であらおう。', r:'両'},
+  '主': {q:'犬の【ぬし】をさがしている。', r:'主'},
+  '乗': {q:'バスに【の】ってがっこうへいく。', r:'乗'},
+  '予': {q:'【よ】ていをたてておこう。', r:'予'},
+  '事': {q:'大【じ】なことをわすれた。', r:'事'},
+  '仕': {q:'おとうさんは【し】ごとにいった。', r:'仕'},
+  '他': {q:'【ほか】のひとのことも考えよう。', r:'他'},
+  '代': {q:'お母さんの【か】わりにかいものした。', r:'代'},
+  '住': {q:'東京に【す】んでいます。', r:'住'},
+  '使': {q:'えんぴつを【つか】って書こう。', r:'使'},
+  '係': {q:'せいそう【がかり】になった。', r:'係'},
+  '倍': {q:'二【ばい】の大きさになった。', r:'倍'},
+  '全': {q:'【ぜん】ぶたべたよ。', r:'全'},
+  '具': {q:'どう【ぐ】をかたづけよう。', r:'具'},
+  '写': {q:'おもいでの【しゃ】しんをとった。', r:'写'},
+  '列': {q:'きちんと【れつ】にならぼう。', r:'列'},
+  '助': {q:'こまっている人を【たす】けた。', r:'助'},
+  '動': {q:'【どう】ぶつえんにいきたい。', r:'動'},
+  '勝': {q:'サッカーのしあいに【か】った。', r:'勝'},
+  '化': {q:'おばけに【ば】けたよ。', r:'化'},
+  '区': {q:'いまは東京の港【く】にすんでいる。', r:'区'},
+  '医': {q:'【い】しゃさんにみてもらった。', r:'医'},
+  '去': {q:'【きょ】ねんのなつはあつかった。', r:'去'},
+  '反': {q:'【はん】たいがわにわたろう。', r:'反'},
+  '取': {q:'ボールを【と】ってなげた。', r:'取'},
+  '受': {q:'プレゼントを【う】けとった。', r:'受'},
+  '号': {q:'くるまの番【ごう】をしらべた。', r:'号'},
+  '向': {q:'まどの【む】こうにうみがみえる。', r:'向'},
+  '君': {q:'【きみ】とあそぶのはたのしい。', r:'君'},
+  '味': {q:'このりょうりは【あじ】がいい。', r:'味'},
+  '命': {q:'【いのち】をたいせつにしよう。', r:'命'},
+  '和': {q:'【わ】しょくがだいすきです。', r:'和'},
+  '品': {q:'おみせに新しい【しな】ものがならんだ。', r:'品'},
+  '員': {q:'クラスの委【いん】をきめた。', r:'員'},
+  '商': {q:'【しょう】てんがいでかいものした。', r:'商'},
+  '問': {q:'先生に【もん】だいをだされた。', r:'問'},
+  '坂': {q:'きゅうな【さか】をのぼった。', r:'坂'},
+  '央': {q:'へやの中【おう】にテーブルがある。', r:'央'},
+  '始': {q:'じゅぎょうが【はじ】まった。', r:'始'},
+  '委': {q:'【い】いんちょうにえらばれた。', r:'委'},
+  '守': {q:'やくそくを【まも】ろう。', r:'守'},
+  '安': {q:'この本は【やす】いね。', r:'安'},
+  '定': {q:'じかんを【き】めてべんきょうする。', r:'定'},
+  '実': {q:'きに【み】がなった。', r:'実'},
+  '客': {q:'おみせに【きゃく】がたくさんきた。', r:'客'},
+  '宮': {q:'おとぎばなしの【みや】こをたずねた。', r:'宮'},
+  '宿': {q:'【しゅく】だいをわすれた。', r:'宿'},
+  '寒': {q:'きょうはとても【さむ】い。', r:'寒'},
+  '対': {q:'三【たい】二でかった。', r:'対'},
+  '届': {q:'てがみが【とど】いた。', r:'届'},
+  '屋': {q:'パン【や】さんでパンをかった。', r:'屋'},
+  '岸': {q:'かわの【きし】であそんだ。', r:'岸'},
+  '島': {q:'うみに【しま】がみえる。', r:'島'},
+  '州': {q:'九【しゅう】にりょこうした。', r:'州'},
+  '帳': {q:'ノートに【ちょう】めんをつけた。', r:'帳'},
+  '平': {q:'でこぼこのない【たい】らなみち。', r:'平'},
+  '幸': {q:'【しあわ】せなきもちになった。', r:'幸'},
+  '度': {q:'きょうの気おんは三十【ど】です。', r:'度'},
+  '庫': {q:'れいぞう【こ】にいれておこう。', r:'庫'},
+  '庭': {q:'【にわ】にはなをうえた。', r:'庭'},
+  '式': {q:'にゅうがく【しき】でうたをうたった。', r:'式'},
+  '役': {q:'おにの【やく】をやった。', r:'役'},
+  '待': {q:'ともだちを【ま】っている。', r:'待'},
+  '急': {q:'【いそ】いでがっこうにいった。', r:'急'},
+  '息': {q:'大きく【いき】をすった。', r:'息'},
+  '悪': {q:'てんきが【わる】くなった。', r:'悪'},
+  '悲': {q:'【かな】しいおはなしをよんだ。', r:'悲'},
+  '想': {q:'たのしいことを【そう】ぞうした。', r:'想'},
+  '意': {q:'あたらしい【い】けんをいった。', r:'意'},
+  '感': {q:'えいがに【かん】どうした。', r:'感'},
+  '所': {q:'あつまる【ところ】をきめよう。', r:'所'},
+  '打': {q:'ボールを【う】ってとばした。', r:'打'},
+  '投': {q:'ちからいっぱい【な】げた。', r:'投'},
+  '拾': {q:'どんぐりを【ひろ】った。', r:'拾'},
+  '持': {q:'にもつを【も】ってあるいた。', r:'持'},
+  '指': {q:'【ゆび】をけがしてしまった。', r:'指'},
+  '放': {q:'つかまえたちょうを【はな】した。', r:'放'},
+  '整': {q:'つくえの上を【せい】りした。', r:'整'},
+  '旅': {q:'かぞくで【たび】にでかけた。', r:'旅'},
+  '族': {q:'家【ぞく】でごはんをたべた。', r:'族'},
+  '昔': {q:'【むかし】のあそびをおしえてもらった。', r:'昔'},
+  '暑': {q:'なつはとても【あつ】い。', r:'暑'},
+  '暗': {q:'へやが【くら】くなった。', r:'暗'},
+  '曲': {q:'すきな【きょく】をきいた。', r:'曲'},
+  '有': {q:'【ゆう】めいなおてらにいった。', r:'有'},
+  '服': {q:'あたらしい【ふく】をきた。', r:'服'},
+  '期': {q:'なつやすみは長【き】かんだ。', r:'期'},
+  '板': {q:'木の【いた】にえをかいた。', r:'板'},
+  '柱': {q:'いえの【はしら】はつよい。', r:'柱'},
+  '根': {q:'きの【ね】がのびている。', r:'根'},
+  '植': {q:'はなを【う】えた。', r:'植'},
+  '業': {q:'じゅ【ぎょう】がはじまった。', r:'業'},
+  '様': {q:'おきゃく【さま】がきた。', r:'様'},
+  '横': {q:'みちを【よこ】にわたった。', r:'横'},
+  '橋': {q:'かわに【はし】がかかっている。', r:'橋'},
+  '次': {q:'【つぎ】のもんだいにいこう。', r:'次'},
+  '歯': {q:'【は】をみがいてねよう。', r:'歯'},
+  '死': {q:'かぶとむしが【し】んでしまった。', r:'死'},
+  '氷': {q:'【こおり】がとけてみずになった。', r:'氷'},
+  '決': {q:'りょこうのいきさきを【き】めた。', r:'決'},
+  '油': {q:'【あぶら】であげたてんぷら。', r:'油'},
+  '波': {q:'うみの【なみ】がたかい。', r:'波'},
+  '注': {q:'コップにみずを【そそ】いだ。', r:'注'},
+  '泳': {q:'プールで【およ】いだ。', r:'泳'},
+  '洋': {q:'たい平【よう】はひろいうみだ。', r:'洋'},
+  '流': {q:'かわの【なが】れがはやい。', r:'流'},
+  '消': {q:'あかりが【き】えた。', r:'消'},
+  '深': {q:'【ふか】いいけにちかづかない。', r:'深'},
+  '温': {q:'【あたた】かいおちゃをのんだ。', r:'温'},
+  '湖': {q:'【みずうみ】にボートがうかんでいる。', r:'湖'},
+  '港': {q:'【みなと】にふねがとまっている。', r:'港'},
+  '湯': {q:'おふろの【ゆ】がわいた。', r:'湯'},
+  '漢': {q:'【かん】じのべんきょうをした。', r:'漢'},
+  '炭': {q:'バーベキューに【すみ】をつかった。', r:'炭'},
+  '物': {q:'わすれ【もの】をしないようにしよう。', r:'物'},
+  '球': {q:'やきゅうの【たま】をなげた。', r:'球'},
+  '由': {q:'り【ゆう】をせつめいした。', r:'由'},
+  '申': {q:'せんせいに【もう】しこんだ。', r:'申'},
+  '界': {q:'せ【かい】ちずをみた。', r:'界'},
+  '畑': {q:'【はたけ】でやさいをそだてた。', r:'畑'},
+  '病': {q:'【びょう】きがなおった。', r:'病'},
+  '発': {q:'あたらしいことを【はっ】けんした。', r:'発'},
+  '登': {q:'やまに【のぼ】った。', r:'登'},
+  '皮': {q:'りんごの【かわ】をむいた。', r:'皮'},
+  '皿': {q:'おいしいりょうりを【さら】にのせた。', r:'皿'},
+  '相': {q:'【あい】てのことを考えよう。', r:'相'},
+  '県': {q:'おきなわ【けん】にいきたい。', r:'県'},
+  '真': {q:'【ま】っすぐまえをむこう。', r:'真'},
+  '着': {q:'あたらしいふくを【き】た。', r:'着'},
+  '短': {q:'えんぴつが【みじか】くなった。', r:'短'},
+  '研': {q:'かがくを【けん】きゅうする。', r:'研'},
+  '礼': {q:'おじぎをして【れい】をした。', r:'礼'},
+  '神': {q:'【じん】じゃにおまいりした。', r:'神'},
+  '祭': {q:'なつ【まつ】りにいった。', r:'祭'},
+  '福': {q:'【ふく】びきでとうせんした。', r:'福'},
+  '秒': {q:'五十メートルを八【びょう】ではしった。', r:'秒'},
+  '究': {q:'しらべたことを研【きゅう】した。', r:'究'},
+  '章': {q:'ながい文【しょう】をかいた。', r:'章'},
+  '童': {q:'【どう】ようをうたった。', r:'童'},
+  '筆': {q:'【ふで】でじをかいた。', r:'筆'},
+  '等': {q:'一【とう】しょうをもらった。', r:'等'},
+  '箱': {q:'【はこ】にいれてかたづけた。', r:'箱'},
+  '級': {q:'三年生の学【きゅう】です。', r:'級'},
+  '緑': {q:'【みどり】のはっぱがきれい。', r:'緑'},
+  '練': {q:'まいにちサッカーを【れん】しゅうする。', r:'練'},
+  '美': {q:'【うつく】しいけしきをみた。', r:'美'},
+  '習': {q:'ピアノを【なら】っている。', r:'習'},
+  '者': {q:'いしゃに見てもらった。', r:'者'},
+  '育': {q:'はなを【そだ】てている。', r:'育'},
+  '苦': {q:'にがてなことに【く】ろうした。', r:'苦'},
+  '荷': {q:'おもい【に】もつをはこんだ。', r:'荷'},
+  '落': {q:'はっぱが【お】ちた。', r:'落'},
+  '葉': {q:'あかい【は】っぱをひろった。', r:'葉'},
+  '薬': {q:'かぜをひいて【くすり】をのんだ。', r:'薬'},
+  '血': {q:'ころんで【ち】がでた。', r:'血'},
+  '表': {q:'くらすの【ひょう】をつくった。', r:'表'},
+  '詩': {q:'すてきな【し】をかいた。', r:'詩'},
+  '談': {q:'せんせいに【そう】だんした。', r:'談'},
+  '調': {q:'むしのことを【しら】べた。', r:'調'},
+  '豆': {q:'せつぶんに【まめ】をまいた。', r:'豆'},
+  '負': {q:'しあいに【ま】けてしまった。', r:'負'},
+  '起': {q:'あさはやく【お】きた。', r:'起'},
+  '路': {q:'つうがく【ろ】をあるいた。', r:'路'},
+  '身': {q:'【み】のまわりをきれいにしよう。', r:'身'},
+  '転': {q:'じてんしゃで【ころ】んだ。', r:'転'},
+  '軽': {q:'この本は【かる】いね。', r:'軽'},
+  '農': {q:'【のう】かのひとがやさいをつくった。', r:'農'},
+  '返': {q:'かりた本を【かえ】した。', r:'返'},
+  '追': {q:'ともだちを【お】いかけた。', r:'追'},
+  '送': {q:'てがみを【おく】った。', r:'送'},
+  '逆': {q:'【ぎゃく】のじゅんにならべた。', r:'逆'},
+  '通': {q:'このみちは毎日【とお】る。', r:'通'},
+  '速': {q:'しんかんせんは【はや】い。', r:'速'},
+  '進': {q:'まえに【すす】もう。', r:'進'},
+  '遊': {q:'こうえんで【あそ】んだ。', r:'遊'},
+  '運': {q:'おもいにもつを【はこ】んだ。', r:'運'},
+  '部': {q:'サッカー【ぶ】にはいった。', r:'部'},
+  '都': {q:'東京【と】はにぎやかだ。', r:'都'},
+  '配': {q:'プリントを【くば】った。', r:'配'},
+  '酒': {q:'おとうさんがお【さけ】をのんだ。', r:'酒'},
+  '重': {q:'このかばんは【おも】い。', r:'重'},
+  '鉄': {q:'【てつ】ぼうであそんだ。', r:'鉄'},
+  '銀': {q:'【ぎん】いろにひかっている。', r:'銀'},
+  '開': {q:'まどを【ひら】いてくうきをいれよう。', r:'開'},
+  '院': {q:'びょう【いん】にいった。', r:'院'},
+  '階': {q:'三【かい】のきょうしつにいった。', r:'階'},
+  '集': {q:'みんなで【あつ】まった。', r:'集'},
+  '面': {q:'おも【しろ】いはなしをきいた。', r:'面'},
+  '題': {q:'さんすうの【だい】をといた。', r:'題'},
+  '飲': {q:'つめたいみずを【の】んだ。', r:'飲'},
+  '館': {q:'としょ【かん】で本をかりた。', r:'館'},
+  '駅': {q:'【えき】でんしゃにのった。', r:'駅'},
 };
 
 // ===== APP STATE =====
@@ -1599,6 +2043,21 @@ function save() {
   localStorage.setItem('kd_incorrect', JSON.stringify(state.incorrect));
   localStorage.setItem('kd_stamps', JSON.stringify(state.stamps));
   localStorage.setItem('kd_bestStreak', state.bestStreak.toString());
+}
+
+function getGradeList(g) {
+  if (g === 1) return GRADE1;
+  if (g === 2) return GRADE2_CLEAN;
+  if (g === 3) return GRADE3;
+  return GRADE1;
+}
+
+// キャラクター名 per grade (1年=しんかい, 2年=鳥, 3年=けんしん)
+function getGradeCharName(g) {
+  if (g === 1) return 'しんかいくん';
+  if (g === 2) return 'とりさん';
+  if (g === 3) return 'けんしんくん';
+  return '';
 }
 
 // ===== SCREEN MANAGEMENT =====
@@ -1634,16 +2093,14 @@ function showScreen(id) {
 
 // ===== GRADE SCREEN =====
 function updateGradeScreen() {
-  const g1m = Object.keys(state.mastered).filter(k => GRADE1.some(g => g.k === k)).length;
-  const g2m = Object.keys(state.mastered).filter(k => GRADE2_CLEAN.some(g => g.k === k)).length;
-  const g1pct = Math.round((g1m/80)*100);
-  const g2pct = Math.round((g2m/GRADE2_CLEAN.length)*100);
-  document.getElementById('grade1pct').textContent = `${g1pct}%`;
-  document.getElementById('grade2pct').textContent = `${g2pct}%`;
-  document.getElementById('grade1count').textContent = `${g1m} / 80 字`;
-  document.getElementById('grade2count').textContent = `${g2m} / ${GRADE2_CLEAN.length} 字`;
-  document.getElementById('grade1progress').style.width = `${g1pct}%`;
-  document.getElementById('grade2progress').style.width = `${g2pct}%`;
+  [1,2,3].forEach(g => {
+    const list = getGradeList(g);
+    const mastered = Object.keys(state.mastered).filter(k => list.some(item => item.k === k)).length;
+    const pct = Math.round((mastered/list.length)*100);
+    document.getElementById(`grade${g}pct`).textContent = `${pct}%`;
+    document.getElementById(`grade${g}count`).textContent = `${mastered} / ${list.length} 字`;
+    document.getElementById(`grade${g}progress`).style.width = `${pct}%`;
+  });
 }
 
 // ===== KANJI LIST =====
@@ -1654,7 +2111,7 @@ function selectGrade(g) {
 }
 
 function updateKanjiList() {
-  const list = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const list = getGradeList(state.currentGrade);
   const masteredCount = Object.keys(state.mastered).filter(k => list.some(g => g.k === k)).length;
   const pct = Math.round((masteredCount / list.length) * 100);
   document.getElementById('listTitle').textContent = `${state.currentGrade}ねんせい（${masteredCount}/${list.length}字 ${pct}%）`;
@@ -1695,7 +2152,7 @@ function startPracticeFrom(list, index) {
 
 function startRetry() {
   state.retryMode = true;
-  const list = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const list = getGradeList(state.currentGrade);
   const retryList = list.filter(item => state.incorrect[item.k]);
   if (retryList.length === 0) {
     showToast('やりなおす漢字がありません');
@@ -1721,21 +2178,20 @@ function loadKanji() {
   document.getElementById('practiceProgress').textContent =
     `${state.currentIndex + 1} / ${state.currentKanjiList.length}`;
 
+  const charName = getGradeCharName(state.currentGrade);
   const messages = [
-    'けんしんくん、お手本をよく見て書いてみよう！',
-    'けんしんくん、ゆっくりでいいよ！がんばれ〜！',
-    'さすが けんしんくん！かっこいい字をかこう！',
-    'けんしんくんなら きれいに書けるよ！',
+    `${charName}、お手本をよく見て書いてみよう！`,
+    `${charName}、ゆっくりでいいよ！がんばれ〜！`,
+    `さすが ${charName}！かっこいい字をかこう！`,
+    `${charName}なら きれいに書けるよ！`,
     'しっかり見てまねしてみよう！',
-    'いつも読書してるから 漢字もとくいだね！',
-    'ピピッ！けんしんくん いっしょにがんばろう！',
-    'けんしんくん、この字はおもしろいよ！',
-    'ていねいに書けるけんしんくんは かっこいい！',
+    `ピピッ！${charName} いっしょにがんばろう！`,
+    `${charName}、この字はおもしろいよ！`,
+    `ていねいに書ける${charName}は かっこいい！`,
   ];
   document.getElementById('birdMessage').textContent =
     messages[Math.floor(Math.random() * messages.length)];
-  placeBird('speechBird', 56, 'normal');
-  placeKenshin('speechKenshin', 36, 'normal');
+  placeGradeCharacters('speech');
 
   clearCanvas();
 
@@ -1747,9 +2203,8 @@ function submitKanji() {
   const item = state.currentKanjiList[state.currentIndex];
   // Check if user drew something
   if (strokeCount < 1) {
-    document.getElementById('birdMessage').textContent = 'けんしんくん、まだなにも書いてないよ！書いてみて！';
-    placeBird('speechBird', 56, 'thinking');
-    placeKenshin('speechKenshin', 36, 'thinking');
+    document.getElementById('birdMessage').textContent = `${getGradeCharName(state.currentGrade)}、まだなにも書いてないよ！書いてみて！`;
+    placeGradeCharacters('speech', 'thinking');
     return;
   }
 
@@ -1761,35 +2216,33 @@ function submitKanji() {
     state.mastered[item.k] = true;
     delete state.incorrect[item.k];
     showStarEffect();
+    const cn = getGradeCharName(state.currentGrade);
     const praiseMessages = [
-      'さすが けんしんくん！かっこいい！',
-      'けんしんくん すごい！じょうずに書けたね！',
-      'いつも読書してるのが いきてるね！',
-      'もう りっぱな かっこいいおにいさんだね！',
-      'けんしんくん 天才！ばっちり！',
+      `さすが ${cn}！かっこいい！`,
+      `${cn} すごい！じょうずに書けたね！`,
+      'ばっちり！どんどん漢字はかせだね！',
+      `${cn} 天才！ばっちり！`,
       'さすがだね！どんどん漢字はかせになってるよ！',
-      'けんしんくん、かっこよすぎ！',
-      'この調子！けんしんくんならぜんぶできるよ！',
-      'ピピーッ！けんしんくん最高！',
-      'うわぁ！きれいな字！さすがけんしんくん！',
+      `この調子！${cn}ならぜんぶできるよ！`,
+      `ピピーッ！${cn}最高！`,
+      `うわぁ！きれいな字！さすが${cn}！`,
     ];
     document.getElementById('birdMessage').textContent =
       praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
-    placeBird('speechBird', 56, 'cheer');
-    placeKenshin('speechKenshin', 36, 'cheer');
+    placeGradeCharacters('speech', 'cheer');
   } else {
     state.incorrect[item.k] = true;
     showWrongAnswerEffect(item.k);
+    const cn = getGradeCharName(state.currentGrade);
     const encourageMessages = [
-      'おしい！けんしんくんなら次はできるよ！',
+      `おしい！${cn}なら次はできるよ！`,
       'だいじょうぶ！もういちど書いてみよう！',
-      'けんしんくん、あきらめないところがかっこいい！',
-      'ちょっとむずかしかったね。でもけんしんくんならだいじょうぶ！',
+      `${cn}、あきらめないところがかっこいい！`,
+      `ちょっとむずかしかったね。でも${cn}ならだいじょうぶ！`,
     ];
     document.getElementById('birdMessage').textContent =
       encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
-    placeBird('speechBird', 56, 'thinking');
-    placeKenshin('speechKenshin', 36, 'thinking');
+    placeGradeCharacters('speech', 'thinking');
   }
   save();
   recordStamp();
@@ -1869,13 +2322,9 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const currentStrokeIndex = strokeStartPositions.length; // 0-indexed
   strokeStartPositions.push({x: normX, y: normY});
 
-  // 余分な画は2画までは許容（ペン離しミス対応）
+  // 余分な画はカウントするだけ（途中でバツは出さない）
   if (currentStrokeIndex >= expectedStrokes.length) {
-    if (currentStrokeIndex >= expectedStrokes.length + 2) {
-      strokeOrderErrors++;
-      maybeShowStrokeOrderError();
-    }
-    return true; // 書き順チェックはスキップ
+    return true;
   }
 
   const expected = expectedStrokes[currentStrokeIndex];
@@ -1883,11 +2332,10 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const dy = normY - expected.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // 許容範囲: 0.28（全体の28%以内ならOK — 子供の汚い字にも対応）
-  if (distance > 0.28) {
+  // 許容範囲: 0.45（全体の45%以内ならOK — よろよろ線にも対応）
+  if (distance > 0.45) {
     strokeOrderErrors++;
-    maybeShowStrokeOrderError();
-    return false;
+    // 途中ではバツを出さない、提出時にまとめて判定
   }
   return true;
 }
@@ -1959,12 +2407,12 @@ function gradeKanji() {
   const coverage = filledPixels / (canvas.width * canvas.height);
   const drewEnough = coverage > 0.008 && strokeCount >= 1;
 
-  // 書き順エラーがあったらバツ
-  if (strokeOrderErrors > 0) return false;
+  // 書き順エラーが半分以上あったらバツ（少しのズレは許容）
+  if (expectedStrokes.length > 0 && strokeOrderErrors > Math.ceil(expectedStrokes.length * 0.5)) return false;
 
-  // 画数チェック：±2画まで許容（ペン離しミス・子供の書き方に対応）
+  // 画数チェック：±5画まで許容（よろよろ線でペンが離れるのに対応）
   if (expectedStrokes.length > 0) {
-    if (Math.abs(strokeCount - expectedStrokes.length) > 2) {
+    if (Math.abs(strokeCount - expectedStrokes.length) > 5) {
       return false; // 画数が違いすぎる = 違う字
     }
   }
@@ -1986,15 +2434,15 @@ function showResults() {
   document.getElementById('resultScore').textContent = `${pct}%`;
   document.getElementById('resultDetail').textContent = `${total}もん中 ${correct}もん せいかい！`;
 
+  const cn = getGradeCharName(state.currentGrade);
   let title = 'おつかれさま！';
   let resultMood = 'normal';
-  if (pct === 100) { title = 'けんしんくん かんぺき！さすが！'; resultMood = 'cheer'; }
-  else if (pct >= 80) { title = 'けんしんくん すごくかっこいい！'; resultMood = 'happy'; }
-  else if (pct >= 50) { title = 'けんしんくん がんばったね！'; resultMood = 'normal'; }
-  else { title = 'けんしんくん つぎもがんばろう！'; resultMood = 'thinking'; }
+  if (pct === 100) { title = `${cn} かんぺき！さすが！`; resultMood = 'cheer'; }
+  else if (pct >= 80) { title = `${cn} すごくかっこいい！`; resultMood = 'happy'; }
+  else if (pct >= 50) { title = `${cn} がんばったね！`; resultMood = 'normal'; }
+  else { title = `${cn} つぎもがんばろう！`; resultMood = 'thinking'; }
   document.getElementById('resultTitle').textContent = title;
-  placeBird('resultBird', 70, resultMood);
-  placeKenshin('resultKenshin', 140, resultMood);
+  placeGradeCharacters('result', resultMood);
 
   const hasIncorrect = state.sessionResults.some(r => !r.correct);
   document.getElementById('retryIncorrectBtn').style.display = hasIncorrect ? 'block' : 'none';
@@ -2006,7 +2454,7 @@ function showResults() {
 
 function retryIncorrect() {
   const incorrectKanji = state.sessionResults.filter(r => !r.correct).map(r => r.kanji);
-  const allList = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const allList = getGradeList(state.currentGrade);
   const retryList = allList.filter(item => incorrectKanji.includes(item.k));
   if (retryList.length > 0) {
     state.retryMode = true;
@@ -2387,6 +2835,8 @@ function sendReport() {
   const totalMastered = Object.keys(state.mastered).length;
   const g1m = Object.keys(state.mastered).filter(k => GRADE1.some(g => g.k === k)).length;
   const g2m = Object.keys(state.mastered).filter(k => GRADE2_CLEAN.some(g => g.k === k)).length;
+  const g3m = Object.keys(state.mastered).filter(k => GRADE3.some(g => g.k === k)).length;
+  const totalKanji = 80 + GRADE2_CLEAN.length + GRADE3.length;
   const today = new Date().toLocaleDateString('ja-JP');
 
   const subject = encodeURIComponent(`【けんしんかんぺき漢字ドリル】学習レポート ${today}`);
@@ -2404,7 +2854,8 @@ function sendReport() {
 
 1年生: ${g1m} / 80 字 クリア (${Math.round(g1m/80*100)}%)
 2年生: ${g2m} / ${GRADE2_CLEAN.length} 字 クリア (${Math.round(g2m/GRADE2_CLEAN.length*100)}%)
-合計: ${totalMastered} / ${80 + GRADE2_CLEAN.length} 字
+3年生: ${g3m} / ${GRADE3.length} 字 クリア (${Math.round(g3m/GRADE3.length*100)}%)
+合計: ${totalMastered} / ${totalKanji} 字
 
 ━━━━━━━━━━━━━━━━━━
 🦜 まいにちがんばっています！
@@ -2644,7 +3095,7 @@ let sentenceTestIndex = 0;
 let sentenceTestResults = [];
 
 function startSentenceTest() {
-  const list = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+  const list = getGradeList(state.currentGrade);
   // Filter to only kanji that have sentence data
   const withSentences = list.filter(item => KANJI_SENTENCES[item.k]);
   if (withSentences.length === 0) {
@@ -2694,19 +3145,18 @@ function loadSentence() {
   document.getElementById('sentenceProgress').textContent =
     `${sentenceTestIndex + 1} / ${sentenceTestList.length}`;
 
+  const cn = getGradeCharName(state.currentGrade);
   const messages = [
-    'けんしんくん、ぶんしょうをよく読んでかんがえよう！',
-    'どの漢字がはいるかな？けんしんくん！',
+    `${cn}、ぶんしょうをよく読んでかんがえよう！`,
+    `どの漢字がはいるかな？${cn}！`,
     'よく読んで、ていねいに漢字を書いてね！',
-    'けんしんくんなら わかるよ！がんばれ！',
+    `${cn}なら わかるよ！がんばれ！`,
     'ぶんしょうのなかの漢字、書けるかな？',
     'すごいね！ちゃんとよめてるよ！',
-    'けんしんくん、読書がすきだからとくいだね！',
   ];
   document.getElementById('sentenceBirdMessage').textContent =
     messages[Math.floor(Math.random() * messages.length)];
-  placeBird('sentenceBird', 56, 'normal');
-  placeKenshin('sentenceKenshin', 36, 'normal');
+  placeGradeCharacters('sentence');
 
   clearSentenceCanvas();
 
@@ -2726,12 +3176,13 @@ function gradeSentenceKanji() {
   const coverage = filledPixels / (canvas.width * canvas.height);
   const drewEnough = coverage > 0.008 && sentenceStrokeCount >= 1;
 
-  // 書き順エラーがあったらバツ
-  if (strokeOrderErrors > 0) return false;
+  // 書き順エラーが3回以上あったらバツ（1〜2回は許容）
+  // 書き順エラーが半分以上あったらバツ（少しのズレは許容）
+  if (expectedStrokes.length > 0 && strokeOrderErrors > Math.ceil(expectedStrokes.length * 0.5)) return false;
 
-  // 画数チェック：±2画まで許容（ペン離しミス・子供の書き方に対応）
+  // 画数チェック：±5画まで許容（よろよろ線でペンが離れるのに対応）
   if (expectedStrokes.length > 0) {
-    if (Math.abs(sentenceStrokeCount - expectedStrokes.length) > 2) {
+    if (Math.abs(sentenceStrokeCount - expectedStrokes.length) > 5) {
       return false;
     }
   }
@@ -2743,9 +3194,8 @@ function submitSentenceAnswer() {
   const item = sentenceTestList[sentenceTestIndex];
   if (sentenceStrokeCount < 1) {
     document.getElementById('sentenceBirdMessage').textContent =
-      'けんしんくん、まだなにも書いてないよ！漢字をかいてみて！';
-    placeBird('sentenceBird', 56, 'thinking');
-    placeKenshin('sentenceKenshin', 36, 'thinking');
+      `${getGradeCharName(state.currentGrade)}、まだなにも書いてないよ！漢字をかいてみて！`;
+    placeGradeCharacters('sentence', 'thinking');
     return;
   }
 
@@ -2758,30 +3208,30 @@ function submitSentenceAnswer() {
     state.mastered[item.k] = true;
     delete state.incorrect[item.k];
     showStarEffect();
+    const cn = getGradeCharName(state.currentGrade);
     const praiseMessages = [
       'すごい！ぶんしょうから漢字がわかったね！',
-      'けんしんくん天才！ばっちり！',
+      `${cn}天才！ばっちり！`,
       'やったね！漢字のちからがついてきてるよ！',
-      'さすが けんしんくん！かんぺき！',
+      `さすが ${cn}！かんぺき！`,
       'ぶんしょうテストもかんたんだね！',
-      'けんしんくん、読むちからもバッチリ！',
+      `${cn}、読むちからもバッチリ！`,
     ];
     document.getElementById('sentenceBirdMessage').textContent =
       praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
-    placeBird('sentenceBird', 56, 'cheer');
-    placeKenshin('sentenceKenshin', 36, 'cheer');
+    placeGradeCharacters('sentence', 'cheer');
   } else {
     state.incorrect[item.k] = true;
     showWrongAnswerEffect(item.k);
+    const cn = getGradeCharName(state.currentGrade);
     const encourageMessages = [
       'おしい！もういちどチャレンジしよう！',
       'だいじょうぶ！つぎはできるよ！',
-      'けんしんくん、あきらめないのがかっこいい！',
+      `${cn}、あきらめないのがかっこいい！`,
     ];
     document.getElementById('sentenceBirdMessage').textContent =
       encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
-    placeBird('sentenceBird', 56, 'thinking');
-    placeKenshin('sentenceKenshin', 36, 'thinking');
+    placeGradeCharacters('sentence', 'thinking');
   }
   save();
   recordStamp();
@@ -2819,15 +3269,15 @@ function showSentenceResults() {
   document.getElementById('resultDetail').textContent =
     `ぶんしょうテスト：${total}もん中 ${correct}もん せいかい！`;
 
+  const cn = getGradeCharName(state.currentGrade);
   let title = 'おつかれさま！';
   let resultMood = 'normal';
   if (pct === 100) { title = 'ぶんしょうテストもかんぺき！'; resultMood = 'cheer'; }
-  else if (pct >= 80) { title = 'けんしんくん すごい！'; resultMood = 'happy'; }
+  else if (pct >= 80) { title = `${cn} すごい！`; resultMood = 'happy'; }
   else if (pct >= 50) { title = 'よくがんばったね！'; resultMood = 'normal'; }
   else { title = 'つぎもがんばろう！'; resultMood = 'thinking'; }
   document.getElementById('resultTitle').textContent = title;
-  placeBird('resultBird', 70, resultMood);
-  placeKenshin('resultKenshin', 140, resultMood);
+  placeGradeCharacters('result', resultMood);
 
   const hasIncorrect = sentenceTestResults.some(r => !r.correct);
   document.getElementById('retryIncorrectBtn').style.display = hasIncorrect ? 'block' : 'none';
@@ -2835,7 +3285,7 @@ function showSentenceResults() {
   // Override retry button to use sentence test retry
   document.getElementById('retryIncorrectBtn').onclick = function() {
     const incorrectKanji = sentenceTestResults.filter(r => !r.correct).map(r => r.kanji);
-    const allList = state.currentGrade === 1 ? GRADE1 : GRADE2_CLEAN;
+    const allList = getGradeList(state.currentGrade);
     const retryList = allList.filter(item => incorrectKanji.includes(item.k));
     if (retryList.length > 0) {
       startSentenceTestFrom(retryList);
@@ -2909,15 +3359,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const titleBirdEl = document.getElementById('titleBird');
   if (titleBirdEl) titleBirdEl.innerHTML = `<img src="${randomBirdImg}" alt="とり" style="width:100px;height:auto;object-fit:contain;">`;
 
-  // Other birds
-  placeBird('gradeBird', 56, 'cheer');
-  placeBird('speechBird', 56, 'normal');
-  placeBird('resultBird', 70, 'happy');
-  // Place Kenshin-kun & Shinkai-kun
+  // Title screen characters
   placeKenshin('titleKenshin', 100, 'cheer');
   placeShinkai('titleShinkai', 100);
-  placeKenshin('gradeKenshin', 112, 'happy');
+  // Grade selection: 各カードにキャラクター配置 (1年=しんかい, 2年=鳥, 3年=けんしん)
+  placeShinkai('gradeChar1', 48);
+  placeBird('gradeChar2', 48, 'cheer');
+  placeKenshin('gradeChar3', 48, 'cheer');
+  // Grade header
+  placeBird('gradeBird', 56, 'cheer');
+  placeKenshin('gradeKenshin', 56, 'happy');
+  placeShinkai('gradeShinkai', 56);
+  // Default speech/result (will be updated per grade)
+  placeBird('speechBird', 56, 'normal');
   placeKenshin('speechKenshin', 36, 'normal');
+  placeBird('resultBird', 70, 'happy');
   placeKenshin('resultKenshin', 140, 'happy');
   // Background birds
   initBackgroundBirds();
