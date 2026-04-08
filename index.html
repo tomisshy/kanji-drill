@@ -337,6 +337,60 @@
   }
   .sentence-buttons .btn { flex: 1; min-width: 100px; }
 
+  /* ===== VOICE SEARCH OVERLAY ===== */
+  .voice-overlay {
+    position: fixed; inset: 0; z-index: 6000;
+    background: rgba(20,20,19,0.6);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .voice-overlay.active { opacity: 1; pointer-events: auto; }
+  .voice-card {
+    background: var(--card-bg); border-radius: var(--radius);
+    padding: 28px 24px; box-shadow: var(--shadow-lg);
+    width: 90%; max-width: 340px; text-align: center;
+    transform: translateY(20px); transition: transform 0.25s;
+  }
+  .voice-overlay.active .voice-card { transform: translateY(0); }
+  .voice-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .voice-hint { font-size: 13px; color: var(--mid-gray); margin-bottom: 20px; }
+  .voice-mic {
+    width: 90px; height: 90px; margin: 0 auto 16px;
+    border-radius: 50%; background: var(--light-gray);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; transition: all 0.2s;
+  }
+  .voice-mic:active { transform: scale(0.95); }
+  .voice-mic.listening { background: #fef0ec; }
+  .mic-icon { font-size: 40px; z-index: 1; }
+  .mic-ring {
+    position: absolute; inset: -6px; border-radius: 50%;
+    border: 3px solid var(--primary); opacity: 0;
+  }
+  .voice-mic.listening .mic-ring {
+    animation: micPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+  .voice-status { font-size: 14px; color: var(--mid-gray); margin-bottom: 16px; min-height: 20px; }
+  .voice-result { margin-bottom: 16px; }
+  .voice-heard { font-size: 16px; color: var(--dark); font-weight: 700; margin-bottom: 8px; }
+  .voice-match {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  }
+  .voice-match-btn {
+    background: var(--card-bg); border: 2px solid var(--primary);
+    border-radius: var(--radius-sm); padding: 10px 16px;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .voice-match-btn:hover { background: #fef0ec; }
+  .voice-match-btn .match-kanji { font-size: 32px; font-weight: 900; }
+  .voice-match-btn .match-reading { font-size: 11px; color: var(--mid-gray); }
+  .voice-controls { margin-top: 8px; }
+
   /* ===== STROKE ORDER OVERLAY ===== */
   .stroke-overlay {
     position: fixed; inset: 0; z-index: 5000;
@@ -517,8 +571,30 @@
   <p class="title-sub">小学1・2・3年生 全440字</p>
   <div class="title-buttons">
     <button class="btn btn-primary" onclick="showScreen('gradeScreen')">れんしゅうする</button>
+    <button class="btn btn-tertiary" onclick="startVoiceSearch()">🎤 こえでかきじゅんけんさく</button>
     <button class="btn btn-secondary" onclick="showScreen('stampScreen')">スタンプちょう</button>
     <button class="btn btn-outline" onclick="sendReport()">レポートをおくる 📧</button>
+  </div>
+</div>
+
+<!-- ===== VOICE SEARCH OVERLAY ===== -->
+<div class="voice-overlay" id="voiceOverlay" onclick="closeVoiceSearch(event)">
+  <div class="voice-card" onclick="event.stopPropagation()" style="position:relative;">
+    <button onclick="closeVoiceOverlay()" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--mid-gray);padding:4px 8px;">✕</button>
+    <h3>🎤 こえでけんさく</h3>
+    <p class="voice-hint">かんじの よみかたを いってね！</p>
+    <div class="voice-mic" id="voiceMic" onclick="toggleVoiceListening()">
+      <div class="mic-icon">🎙️</div>
+      <div class="mic-ring" id="micRing"></div>
+    </div>
+    <div class="voice-status" id="voiceStatus">マイクをタップしてね</div>
+    <div class="voice-result" id="voiceResult" style="display:none;">
+      <div class="voice-heard" id="voiceHeard"></div>
+      <div class="voice-match" id="voiceMatch"></div>
+    </div>
+    <div class="voice-controls">
+      <button class="btn btn-sm btn-primary" onclick="closeVoiceOverlay()">とじる</button>
+    </div>
   </div>
 </div>
 
@@ -2332,8 +2408,8 @@ function checkStrokeOrder(canvasX, canvasY, canvas) {
   const dy = normY - expected.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // 許容範囲: 0.45（全体の45%以内ならOK — よろよろ線にも対応）
-  if (distance > 0.45) {
+  // 許容範囲: 0.6（全体の60%以内ならOK — よろよろ線にも対応）
+  if (distance > 0.6) {
     strokeOrderErrors++;
     // 途中ではバツを出さない、提出時にまとめて判定
   }
@@ -2408,11 +2484,11 @@ function gradeKanji() {
   const drewEnough = coverage > 0.008 && strokeCount >= 1;
 
   // 書き順エラーが半分以上あったらバツ（少しのズレは許容）
-  if (expectedStrokes.length > 0 && strokeOrderErrors > Math.ceil(expectedStrokes.length * 0.5)) return false;
+  if (expectedStrokes.length > 0 && strokeOrderErrors > Math.ceil(expectedStrokes.length * 0.75)) return false;
 
   // 画数チェック：±5画まで許容（よろよろ線でペンが離れるのに対応）
   if (expectedStrokes.length > 0) {
-    if (Math.abs(strokeCount - expectedStrokes.length) > 5) {
+    if (Math.abs(strokeCount - expectedStrokes.length) > 8) {
       return false; // 画数が違いすぎる = 違う字
     }
   }
@@ -3178,11 +3254,11 @@ function gradeSentenceKanji() {
 
   // 書き順エラーが3回以上あったらバツ（1〜2回は許容）
   // 書き順エラーが半分以上あったらバツ（少しのズレは許容）
-  if (expectedStrokes.length > 0 && strokeOrderErrors > Math.ceil(expectedStrokes.length * 0.5)) return false;
+  if (expectedStrokes.length > 0 && strokeOrderErrors > Math.ceil(expectedStrokes.length * 0.75)) return false;
 
   // 画数チェック：±5画まで許容（よろよろ線でペンが離れるのに対応）
   if (expectedStrokes.length > 0) {
-    if (Math.abs(sentenceStrokeCount - expectedStrokes.length) > 5) {
+    if (Math.abs(sentenceStrokeCount - expectedStrokes.length) > 8) {
       return false;
     }
   }
@@ -3343,6 +3419,158 @@ function initSentenceBgBirds() {
     div.innerHTML = `<img src="${birdImages[c.img]}" style="width:${c.size}px;height:auto;" alt="">`;
     container.appendChild(div);
   });
+}
+
+// ===== VOICE SEARCH =====
+let voiceRecognition = null;
+let isListening = false;
+
+function startVoiceSearch() {
+  document.getElementById('voiceOverlay').classList.add('active');
+  document.getElementById('voiceStatus').textContent = 'マイクをタップしてね';
+  document.getElementById('voiceResult').style.display = 'none';
+  document.getElementById('voiceMic').classList.remove('listening');
+  isListening = false;
+}
+
+function closeVoiceSearch(e) {
+  if (e && e.target && e.target.id !== 'voiceOverlay') return;
+  closeVoiceOverlay();
+}
+
+function closeVoiceOverlay() {
+  document.getElementById('voiceOverlay').classList.remove('active');
+  stopListening();
+}
+
+function toggleVoiceListening() {
+  if (isListening) {
+    stopListening();
+  } else {
+    startListening();
+  }
+}
+
+function startListening() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    document.getElementById('voiceStatus').textContent = 'このブラウザは音声にたいおうしていません';
+    return;
+  }
+
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.lang = 'ja-JP';
+  voiceRecognition.interimResults = false;
+  voiceRecognition.maxAlternatives = 1;
+
+  voiceRecognition.onstart = () => {
+    isListening = true;
+    document.getElementById('voiceMic').classList.add('listening');
+    document.getElementById('voiceStatus').textContent = 'きいてるよ…はなしてね！';
+    document.getElementById('voiceResult').style.display = 'none';
+  };
+
+  voiceRecognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    stopListening();
+    processVoiceResult(transcript);
+  };
+
+  voiceRecognition.onerror = (event) => {
+    stopListening();
+    if (event.error === 'no-speech') {
+      document.getElementById('voiceStatus').textContent = 'きこえなかったよ。もういちどタップしてね';
+    } else if (event.error === 'not-allowed') {
+      document.getElementById('voiceStatus').textContent = 'マイクのきょかをしてね';
+    } else {
+      document.getElementById('voiceStatus').textContent = 'うまくいかなかったよ。もういちどやってみてね';
+    }
+  };
+
+  voiceRecognition.onend = () => {
+    isListening = false;
+    document.getElementById('voiceMic').classList.remove('listening');
+  };
+
+  voiceRecognition.start();
+}
+
+function stopListening() {
+  if (voiceRecognition) {
+    try { voiceRecognition.stop(); } catch(e) {}
+    voiceRecognition = null;
+  }
+  isListening = false;
+  document.getElementById('voiceMic').classList.remove('listening');
+}
+
+function processVoiceResult(transcript) {
+  // ひらがな・カタカナに正規化して検索
+  const heard = transcript.trim();
+  document.getElementById('voiceHeard').textContent = `「${heard}」ときこえたよ`;
+  document.getElementById('voiceResult').style.display = 'block';
+
+  // 全学年の漢字から読みを検索
+  const allKanji = [...GRADE1, ...GRADE2_CLEAN, ...GRADE3];
+  const heardHira = toHiragana(heard);
+  const matches = [];
+
+  allKanji.forEach(item => {
+    // 音読みチェック（カタカナ→ひらがなに変換して比較）
+    if (item.on) {
+      const readings = item.on.split('・');
+      for (const r of readings) {
+        const rHira = toHiragana(r);
+        if (rHira === heardHira || heardHira.includes(rHira) || rHira.includes(heardHira)) {
+          matches.push({ kanji: item.k, reading: r, type: 'おん' });
+          return;
+        }
+      }
+    }
+    // 訓読みチェック（括弧除去してひらがなで比較）
+    if (item.kun) {
+      const readings = item.kun.split('・');
+      for (const r of readings) {
+        const rClean = r.replace(/\(.*?\)/g, '');
+        const rFull = r.replace(/[()]/g, '');
+        if (rClean === heardHira || rFull === heardHira || heardHira.includes(rClean) || rClean.includes(heardHira)) {
+          matches.push({ kanji: item.k, reading: r, type: 'くん' });
+          return;
+        }
+      }
+    }
+    // 漢字そのものが聞こえた場合
+    if (heard === item.k) {
+      matches.push({ kanji: item.k, reading: item.on || item.kun || '', type: '' });
+    }
+  });
+
+  const matchContainer = document.getElementById('voiceMatch');
+  if (matches.length === 0) {
+    matchContainer.innerHTML = '<div style="color:var(--mid-gray);font-size:13px;">みつからなかったよ。もういちどいってみてね</div>';
+    document.getElementById('voiceStatus').textContent = 'マイクをタップしてもういちど';
+  } else {
+    // 最大8件表示
+    const shown = matches.slice(0, 8);
+    matchContainer.innerHTML = shown.map(m =>
+      `<div class="voice-match-btn" onclick="voiceShowStroke('${m.kanji}')">
+        <div class="match-kanji">${m.kanji}</div>
+        <div class="match-reading">${m.reading}</div>
+      </div>`
+    ).join('');
+    document.getElementById('voiceStatus').textContent = `${matches.length}こ みつかったよ！タップしてかきじゅんをみよう`;
+  }
+}
+
+function toHiragana(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, ch =>
+    String.fromCharCode(ch.charCodeAt(0) - 0x60)
+  ).replace(/[\s\u3000]/g, '');
+}
+
+function voiceShowStroke(kanji) {
+  closeVoiceOverlay();
+  loadAndShowStrokeOrder(kanji);
 }
 
 // ===== INIT =====
