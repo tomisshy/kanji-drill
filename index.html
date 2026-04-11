@@ -141,6 +141,96 @@
     font-size: 10px; color: var(--tertiary);
   }
   .kanji-cell.incorrect { background: #fef0ec; border-color: var(--primary); }
+  .cell-mic {
+    position: absolute; bottom: 3px; right: 3px;
+    font-size: 9px; opacity: 0; cursor: pointer; z-index: 2;
+    background: rgba(106,155,204,0.18); border-radius: 4px;
+    padding: 1px 3px; line-height: 1.4; transition: opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .kanji-cell:hover .cell-mic,
+  .kanji-cell:active .cell-mic { opacity: 1; }
+
+  /* ===== VOICE STROKE PRACTICE SCREEN ===== */
+  #voiceStrokeScreen {
+    align-items: center; gap: 10px;
+    background: linear-gradient(160deg, #edf4ff 0%, var(--light-gray) 100%);
+    padding-top: 16px; padding-bottom: 32px;
+  }
+  .vs-header {
+    width: 100%; max-width: 400px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .vs-kanji-title {
+    font-size: 36px; font-weight: 900; flex: 1;
+    text-align: center; color: var(--dark); line-height: 1;
+  }
+  .vs-kanji-info {
+    font-size: 12px; color: var(--mid-gray); text-align: center; line-height: 1.6;
+    width: 100%; max-width: 400px;
+  }
+  .vs-svg-wrap {
+    width: 280px; height: 280px; flex-shrink: 0;
+    background: white; border-radius: var(--radius);
+    box-shadow: var(--shadow-lg); border: 3px solid var(--light-gray);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .vs-svg-wrap::before,
+  .vs-svg-wrap::after {
+    content: ''; position: absolute; background: rgba(0,0,0,0.06);
+    pointer-events: none; z-index: 1;
+  }
+  .vs-svg-wrap::before { top: 50%; left: 5%; right: 5%; height: 1px; }
+  .vs-svg-wrap::after { left: 50%; top: 5%; bottom: 5%; width: 1px; }
+  .vs-svg-wrap svg { width: 260px; height: 260px; }
+  .vs-stroke-label {
+    font-size: 15px; font-weight: 700; color: var(--secondary);
+    text-align: center; min-height: 22px;
+  }
+  .vs-mic-area {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .vs-mic-btn {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--secondary); color: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+    box-shadow: 0 4px 16px rgba(106,155,204,0.4);
+    transition: background 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .vs-mic-btn .mic-icon { font-size: 28px; z-index: 1; }
+  .vs-mic-btn .mic-ring {
+    position: absolute; inset: -6px; border-radius: 50%;
+    border: 3px solid var(--secondary); opacity: 0;
+  }
+  .vs-mic-btn.listening {
+    background: var(--primary);
+    box-shadow: 0 4px 20px rgba(217,119,87,0.5);
+  }
+  .vs-mic-btn.listening .mic-ring { animation: micPulse 1.2s ease-in-out infinite; }
+  .vs-status-text {
+    font-size: 13px; color: var(--mid-gray); font-weight: 600;
+    text-align: center; min-height: 18px;
+  }
+  .vs-heard-text {
+    font-size: 18px; font-weight: 700; color: var(--primary);
+    min-height: 26px; text-align: center;
+  }
+  .vs-controls {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .vs-hints {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+    width: 100%; max-width: 300px;
+    background: rgba(255,255,255,0.7);
+    border-radius: var(--radius-sm); padding: 10px;
+  }
+  .vs-hint {
+    font-size: 11px; color: var(--mid-gray); font-weight: 600;
+    background: white; border-radius: 6px; padding: 5px 4px; text-align: center;
+  }
 
   .retry-banner {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -790,6 +880,43 @@
       <button class="btn btn-sm btn-outline" onclick="replayStrokeOrder()">もういちど ↻</button>
       <button class="btn btn-sm btn-primary" onclick="closeStrokeOrderBtn()">とじる</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== VOICE STROKE PRACTICE SCREEN ===== -->
+<div id="voiceStrokeScreen" class="screen">
+  <div class="vs-header">
+    <button class="back-btn" onclick="exitVoiceStroke()">←</button>
+    <div class="vs-kanji-title" id="vsKanjiTitle">一</div>
+    <div style="width:40px;flex-shrink:0;"></div>
+  </div>
+  <div class="vs-kanji-info" id="vsKanjiInfo"></div>
+
+  <div class="vs-svg-wrap" id="vsSvgWrap">
+    <div style="color:var(--mid-gray);font-size:14px;">よみこみ中…</div>
+  </div>
+  <div class="vs-stroke-label" id="vsStrokeLabel">ぜんぶで ? かく</div>
+
+  <div class="vs-mic-area">
+    <div class="vs-mic-btn" id="vsMicBtn" onclick="toggleVoiceStrokeListening()">
+      <div class="mic-icon">🎙️</div>
+      <div class="mic-ring"></div>
+    </div>
+    <div class="vs-status-text" id="vsStatusText">マイクをタップしてね</div>
+    <div class="vs-heard-text" id="vsHeardText"></div>
+  </div>
+
+  <div class="vs-controls">
+    <button class="btn btn-sm btn-outline" onclick="vsPrevStroke()">◀ まえ</button>
+    <button class="btn btn-sm btn-primary" onclick="vsNextStroke()">つぎ ▶</button>
+    <button class="btn btn-sm btn-tertiary" onclick="vsRestartStrokes()">🔄 はじめ</button>
+  </div>
+
+  <div class="vs-hints">
+    <div class="vs-hint">「つぎ」→ 次の画</div>
+    <div class="vs-hint">「もどる」→ 前の画</div>
+    <div class="vs-hint">「さいしょ」→ やりなおし</div>
+    <div class="vs-hint">数字(いち〜) → 画を指定</div>
   </div>
 </div>
 
@@ -2138,6 +2265,11 @@ function getGradeCharName(g) {
 
 // ===== SCREEN MANAGEMENT =====
 function showScreen(id) {
+  // 音声書き順練習画面を離れるときはリスニングを停止
+  if (id !== 'voiceStrokeScreen' && typeof stopVoiceStrokeListening === 'function') {
+    stopVoiceStrokeListening();
+  }
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 
@@ -2211,7 +2343,7 @@ function updateKanjiList() {
     cell.className = 'kanji-cell';
     if (state.mastered[item.k]) cell.classList.add('mastered');
     if (state.incorrect[item.k] && !state.retryMode) cell.classList.add('incorrect');
-    cell.textContent = item.k;
+    cell.innerHTML = `${item.k}<span class="cell-mic" onclick="event.stopPropagation();openVoiceStrokePractice('${item.k}')" title="こえでかきじゅん">🎤</span>`;
     cell.onclick = () => startPracticeFrom(displayList, i);
     grid.appendChild(cell);
   });
@@ -3571,6 +3703,361 @@ function toHiragana(str) {
 function voiceShowStroke(kanji) {
   closeVoiceOverlay();
   loadAndShowStrokeOrder(kanji);
+}
+
+// ===== VOICE STROKE PRACTICE =====
+let vsKanji = null;
+let vsStrokePaths = [];
+let vsCurrentStroke = -1;
+let vsRecognition = null;
+let vsListening = false;
+let vsSvgEl = null;
+
+const VS_NEXT    = ['つぎ', 'ねくすと', 'すすむ', 'はい', 'うん', 'おけ', 'かく', 'いく', 'すすんで', 'つぎにいって'];
+const VS_PREV    = ['もどる', 'まえ', 'ひとつまえ', 'もどして', 'まえにもどる'];
+const VS_RESTART = ['はじめ', 'さいしょ', 'もういちど', 'いちから', 'りせっと', 'やりなおし'];
+const VS_EXIT    = ['おわり', 'やめる', 'おしまい', 'とじる', 'しゅうりょう'];
+const VS_NUM_MAP = {
+  'いち':1, 'に':2, 'さん':3, 'し':4, 'よん':4, 'ご':5,
+  'ろく':6, 'なな':7, 'しち':7, 'はち':8, 'きゅう':9, 'く':9,
+  'じゅう':10, 'じゅういち':11, 'じゅうに':12, 'じゅうさん':13,
+  'じゅうし':14, 'じゅうよん':14, 'じゅうご':15, 'じゅうろく':16,
+  'じゅうしち':17, 'じゅうなな':17, 'じゅうはち':18,
+  'じゅうきゅう':19, 'じゅうく':19, 'にじゅう':20,
+};
+
+function openVoiceStrokePractice(kanji) {
+  vsKanji = kanji;
+  vsCurrentStroke = -1;
+  vsStrokePaths = [];
+  vsSvgEl = null;
+
+  const item = [...GRADE1, ...GRADE2_CLEAN, ...GRADE3].find(k => k.k === kanji);
+  document.getElementById('vsKanjiTitle').textContent = kanji;
+  document.getElementById('vsKanjiInfo').textContent = item
+    ? `おん: ${item.on || 'ー'} ／ くん: ${item.kun || 'ー'} ／ いみ: ${item.m}`
+    : '';
+  document.getElementById('vsStrokeLabel').textContent = 'よみこみ中…';
+  document.getElementById('vsHeardText').textContent = '';
+  document.getElementById('vsStatusText').textContent = 'よみこみ中…';
+
+  showScreen('voiceStrokeScreen');
+  loadVoiceStrokeSVG(kanji);
+}
+
+async function loadVoiceStrokeSVG(kanji) {
+  const wrap = document.getElementById('vsSvgWrap');
+  wrap.innerHTML = '<div style="color:var(--mid-gray);font-size:14px;">よみこみ中…</div>';
+
+  const code = kanji.codePointAt(0).toString(16).padStart(5, '0');
+  try {
+    let svgText;
+    if (strokeOrderCache[kanji]) {
+      svgText = strokeOrderCache[kanji];
+    } else {
+      const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg@master/kanji/${code}.svg`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('not found');
+      svgText = await resp.text();
+      strokeOrderCache[kanji] = svgText;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const paths = doc.querySelectorAll('path');
+    if (paths.length === 0) throw new Error('no paths');
+
+    vsStrokePaths = Array.from(paths);
+    vsCurrentStroke = -1;
+
+    vsSvgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    vsSvgEl.setAttribute('viewBox', '0 0 109 109');
+    vsSvgEl.setAttribute('width', '260');
+    vsSvgEl.setAttribute('height', '260');
+
+    vsStrokePaths.forEach((p, i) => {
+      const clone = p.cloneNode(true);
+      clone.setAttribute('fill', 'none');
+      clone.setAttribute('stroke', '#141413');
+      clone.setAttribute('stroke-width', '3');
+      clone.setAttribute('stroke-linecap', 'round');
+      clone.setAttribute('stroke-linejoin', 'round');
+      clone.setAttribute('opacity', '0.1');
+      clone.id = `vs-s-${i}`;
+      vsSvgEl.appendChild(clone);
+
+      const m = p.getAttribute('d').match(/^[Mm]\s*([\d.]+)[,\s]+([\d.]+)/);
+      if (m) {
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', parseFloat(m[1]) - 4);
+        t.setAttribute('y', parseFloat(m[2]) - 2);
+        t.setAttribute('font-size', '9');
+        t.setAttribute('fill', '#d97757');
+        t.setAttribute('font-weight', '700');
+        t.setAttribute('opacity', '0');
+        t.id = `vs-n-${i}`;
+        t.textContent = i + 1;
+        vsSvgEl.appendChild(t);
+      }
+    });
+
+    wrap.innerHTML = '';
+    wrap.appendChild(vsSvgEl);
+    vsUpdateLabel();
+    document.getElementById('vsStatusText').textContent = 'マイクをタップしてね';
+    startVoiceStrokeListening();
+  } catch(e) {
+    wrap.innerHTML = `<div style="font-size:96px;font-weight:900;color:var(--dark);line-height:1;">${kanji}</div>`;
+    document.getElementById('vsStrokeLabel').textContent = 'かきじゅんデータがみつかりません';
+    document.getElementById('vsStatusText').textContent = 'マイクをタップしてね';
+    startVoiceStrokeListening();
+  }
+}
+
+function vsUpdateLabel() {
+  const total = vsStrokePaths.length;
+  if (total === 0) return;
+  if (vsCurrentStroke === -1) {
+    document.getElementById('vsStrokeLabel').textContent =
+      `ぜんぶで ${total} かく ／ 「つぎ」といってね！`;
+  } else if (vsCurrentStroke >= total - 1) {
+    document.getElementById('vsStrokeLabel').textContent =
+      `${total} / ${total} かくめ ✓ かんぺき！`;
+  } else {
+    document.getElementById('vsStrokeLabel').textContent =
+      `${vsCurrentStroke + 1} / ${total} かくめ`;
+  }
+}
+
+function vsShowStroke(index) {
+  if (!vsSvgEl) return;
+  const total = vsStrokePaths.length;
+  if (index < 0) { vsResetAllStrokes(); return; }
+  if (index >= total) return;
+
+  for (let i = 0; i < total; i++) {
+    const s = vsSvgEl.querySelector(`#vs-s-${i}`);
+    const n = vsSvgEl.querySelector(`#vs-n-${i}`);
+    if (!s) continue;
+    if (i < index) {
+      s.setAttribute('stroke', '#b0aea5');
+      s.setAttribute('stroke-width', '3');
+      s.setAttribute('opacity', '1');
+      s.style.strokeDasharray = '';
+      s.style.strokeDashoffset = '';
+      s.style.animation = '';
+      if (n) n.setAttribute('opacity', '1');
+    } else if (i === index) {
+      s.setAttribute('stroke', '#d97757');
+      s.setAttribute('stroke-width', '4');
+      s.setAttribute('opacity', '1');
+      const len = s.getTotalLength ? s.getTotalLength() : 200;
+      s.style.strokeDasharray = len;
+      s.style.strokeDashoffset = len;
+      s.style.setProperty('--stroke-len', len);
+      s.style.animation = 'drawStroke 0.5s ease forwards';
+      if (n) n.setAttribute('opacity', '1');
+      setTimeout(() => {
+        if (s.isConnected) {
+          s.setAttribute('stroke', '#141413');
+          s.setAttribute('stroke-width', '3');
+          s.style.strokeDasharray = '';
+          s.style.strokeDashoffset = '';
+          s.style.animation = '';
+        }
+      }, 560);
+    } else {
+      s.setAttribute('stroke', '#141413');
+      s.setAttribute('stroke-width', '3');
+      s.setAttribute('opacity', '0.1');
+      s.style.strokeDasharray = '';
+      s.style.strokeDashoffset = '';
+      s.style.animation = '';
+      if (n) n.setAttribute('opacity', '0');
+    }
+  }
+  vsCurrentStroke = index;
+  vsUpdateLabel();
+}
+
+function vsResetAllStrokes() {
+  if (!vsSvgEl) return;
+  vsStrokePaths.forEach((_, i) => {
+    const s = vsSvgEl.querySelector(`#vs-s-${i}`);
+    const n = vsSvgEl.querySelector(`#vs-n-${i}`);
+    if (s) {
+      s.setAttribute('stroke', '#141413');
+      s.setAttribute('opacity', '0.1');
+      s.style.strokeDasharray = '';
+      s.style.strokeDashoffset = '';
+      s.style.animation = '';
+    }
+    if (n) n.setAttribute('opacity', '0');
+  });
+  vsCurrentStroke = -1;
+  vsUpdateLabel();
+}
+
+function vsNextStroke() {
+  const next = vsCurrentStroke + 1;
+  if (next < vsStrokePaths.length) {
+    vsShowStroke(next);
+    vsSpeak(`${next + 1}かくめ`);
+  } else {
+    vsSpeak('かんぺき！ぜんぶのかくだよ！');
+    showToast('かんぺき！ぜんぶのかく！ ✓');
+  }
+}
+
+function vsPrevStroke() {
+  if (vsCurrentStroke > 0) {
+    vsShowStroke(vsCurrentStroke - 1);
+  } else {
+    vsResetAllStrokes();
+    document.getElementById('vsHeardText').textContent = '';
+  }
+}
+
+function vsRestartStrokes() {
+  vsResetAllStrokes();
+  document.getElementById('vsHeardText').textContent = '';
+}
+
+function vsJumpToStroke(num) {
+  const idx = num - 1;
+  if (idx >= 0 && idx < vsStrokePaths.length) vsShowStroke(idx);
+}
+
+function vsSpeak(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP';
+  u.rate = 1.2;
+  window.speechSynthesis.speak(u);
+}
+
+function toggleVoiceStrokeListening() {
+  if (vsListening) stopVoiceStrokeListening();
+  else startVoiceStrokeListening();
+}
+
+function startVoiceStrokeListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR || vsListening) return;
+  try {
+    vsRecognition = new SR();
+    vsRecognition.lang = 'ja-JP';
+    vsRecognition.interimResults = false;
+    vsRecognition.maxAlternatives = 3;
+    vsRecognition.continuous = false;
+
+    vsRecognition.onstart = () => {
+      vsListening = true;
+      const btn = document.getElementById('vsMicBtn');
+      if (btn) btn.classList.add('listening');
+      const st = document.getElementById('vsStatusText');
+      if (st) st.textContent = 'きいてるよ…はなしてね！';
+    };
+
+    vsRecognition.onresult = (event) => {
+      const alts = Array.from(event.results[0]).map(r => toHiragana(r.transcript.trim()));
+      processVsCommand(alts[0], alts);
+    };
+
+    vsRecognition.onerror = (event) => {
+      vsListening = false;
+      const btn = document.getElementById('vsMicBtn');
+      if (btn) btn.classList.remove('listening');
+      if (event.error !== 'no-speech') {
+        const st = document.getElementById('vsStatusText');
+        if (st) st.textContent = 'マイクをタップしてね';
+      }
+    };
+
+    vsRecognition.onend = () => {
+      vsListening = false;
+      const btn = document.getElementById('vsMicBtn');
+      if (btn) btn.classList.remove('listening');
+      // 画面が開いている間は自動再起動
+      const screen = document.getElementById('voiceStrokeScreen');
+      if (screen && screen.classList.contains('active')) {
+        setTimeout(() => { if (!vsListening) startVoiceStrokeListening(); }, 400);
+      }
+    };
+
+    vsRecognition.start();
+  } catch(e) {
+    vsListening = false;
+  }
+}
+
+function stopVoiceStrokeListening() {
+  if (vsRecognition) {
+    try { vsRecognition.stop(); } catch(e) {}
+    vsRecognition = null;
+  }
+  vsListening = false;
+  const btn = document.getElementById('vsMicBtn');
+  if (btn) btn.classList.remove('listening');
+  const st = document.getElementById('vsStatusText');
+  if (st) st.textContent = 'マイクをタップしてね';
+}
+
+function processVsCommand(t, alternatives) {
+  const heardEl = document.getElementById('vsHeardText');
+  const statusEl = document.getElementById('vsStatusText');
+  if (heardEl) heardEl.textContent = `「${t}」`;
+
+  const check = (words) => words.some(w => t.includes(toHiragana(w)));
+
+  if (check(VS_NEXT)) {
+    if (statusEl) statusEl.textContent = '→ つぎのかく';
+    vsNextStroke();
+    return;
+  }
+  if (check(VS_PREV)) {
+    if (statusEl) statusEl.textContent = '← まえのかく';
+    vsPrevStroke();
+    return;
+  }
+  if (check(VS_RESTART)) {
+    if (statusEl) statusEl.textContent = '🔄 はじめから';
+    vsRestartStrokes();
+    return;
+  }
+  if (check(VS_EXIT)) {
+    exitVoiceStroke();
+    return;
+  }
+
+  // 数字によるジャンプ（長い語を先にチェック）
+  const numEntries = Object.entries(VS_NUM_MAP).sort((a, b) => b[0].length - a[0].length);
+  for (const [word, num] of numEntries) {
+    const hw = toHiragana(word);
+    if (t === hw || t.startsWith(hw) ||
+        t.includes(hw + 'かく') || t.includes(hw + 'かくめ') || t.includes(hw + 'ばんめ')) {
+      vsJumpToStroke(num);
+      if (statusEl) statusEl.textContent = `${num}かくめへジャンプ`;
+      return;
+    }
+  }
+
+  // 数字（アラビア数字）
+  const dm = t.match(/(\d+)/);
+  if (dm) {
+    vsJumpToStroke(parseInt(dm[1]));
+    if (statusEl) statusEl.textContent = `${dm[1]}かくめへジャンプ`;
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = 'きいてるよ…もういちどいってね';
+}
+
+function exitVoiceStroke() {
+  stopVoiceStrokeListening();
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  showScreen('kanjiListScreen');
 }
 
 // ===== INIT =====
